@@ -77,14 +77,24 @@
 
         .clickable-row-cell { cursor: pointer; transition: background-color 0.2s; }
         .clickable-row-cell:hover { background-color: #f8fafc; }
+
+        /* Estilos para Transição da Sidebar */
+        #sidebar { transition: all 0.3s ease-in-out; }
+        #dashboardView, #reportView { transition: all 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
+
+    <!-- Input Oculto para Fallback de Pasta (Ambientes Restritos) -->
+    <input type="file" id="folderInputFallback" webkitdirectory directory multiple class="hidden" onchange="handleFallbackFolder(this)">
 
     <div id="app" class="max-w-[1400px] mx-auto px-4 py-6">
         <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex flex-col gap-1">
                 <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="p-2 hover:bg-slate-200 rounded-lg transition text-slate-500" title="Recolher/Expandir Barra Lateral">
+                        <i id="toggleSidebarIcon" data-lucide="panel-left-close" class="w-5 h-5"></i>
+                    </button>
                     <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
                         <i data-lucide="layout-dashboard" class="text-blue-600"></i>
                         Dashboard Analítico
@@ -96,7 +106,7 @@
                 </div>
                 
                 <!-- Navegação Principal -->
-                <nav class="flex items-center gap-6 mt-2">
+                <nav class="flex items-center gap-6 mt-2 ml-10">
                     <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-link active text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center gap-2">
                         <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard
                     </button>
@@ -123,7 +133,7 @@
 
         <div id="main-content" class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             <!-- Sidebar Compartilhada -->
-            <div class="xl:col-span-3 space-y-6 shrink-0">
+            <div id="sidebar" class="xl:col-span-3 space-y-6 shrink-0">
                 <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="folder-search" class="w-4 h-4 text-orange-500"></i> Pasta Local (API)
@@ -269,7 +279,7 @@
                         </button>
                     </div>
 
-                    <!-- Filtros do Report (Ajustados para visibilidade máxima) -->
+                    <!-- Filtros do Report -->
                     <div class="mb-6 p-5 bg-slate-50 border border-slate-200 rounded-xl shadow-inner">
                         <div class="flex items-center gap-2 mb-3">
                             <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
@@ -449,7 +459,7 @@
         </div>
     </div>
 
-    <!-- Modal de Evidência de Análise (Original Dashboard) -->
+    <!-- Modal de Evidência de Análise -->
     <div id="evidenceModal" class="hidden fixed inset-0 z-[110] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
@@ -555,7 +565,7 @@
 
         async function getDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 7); 
+                const request = indexedDB.open(DB_NAME, 8); // Increment version
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -568,27 +578,56 @@
         }
 
         async function saveToDB(key, val) {
-            const db = await getDB();
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            tx.objectStore(STORE_NAME).put(val, key);
-            return new Promise((resolve) => tx.oncomplete = resolve);
+            try {
+                const db = await getDB();
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).put(val, key);
+                return new Promise((resolve) => tx.oncomplete = resolve);
+            } catch (e) { console.warn("Erro ao gravar no DB", e); }
         }
 
         async function getFromDB(key) {
-            const db = await getDB();
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const request = tx.objectStore(STORE_NAME).get(key);
-            return new Promise((resolve) => request.onsuccess = () => resolve(request.result));
+            try {
+                const db = await getDB();
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const request = tx.objectStore(STORE_NAME).get(key);
+                return new Promise((resolve) => request.onsuccess = () => resolve(request.result));
+            } catch (e) { return null; }
         }
 
         async function removeFromDB(key) {
-            const db = await getDB();
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            tx.objectStore(STORE_NAME).delete(key);
-            return new Promise((resolve) => tx.oncomplete = resolve);
+            try {
+                const db = await getDB();
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).delete(key);
+                return new Promise((resolve) => tx.oncomplete = resolve);
+            } catch (e) {}
         }
 
-        // --- Navegação ---
+        // --- Navegação e UI ---
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const dashView = document.getElementById('dashboardView');
+            const repView = document.getElementById('reportView');
+            const icon = document.getElementById('toggleSidebarIcon');
+            
+            const isHidden = sidebar.classList.contains('hidden');
+            
+            if (isHidden) {
+                sidebar.classList.remove('hidden');
+                dashView.classList.replace('xl:col-span-12', 'xl:col-span-9');
+                repView.classList.replace('xl:col-span-12', 'xl:col-span-9');
+                icon.setAttribute('data-lucide', 'panel-left-close');
+            } else {
+                sidebar.classList.add('hidden');
+                dashView.classList.replace('xl:col-span-9', 'xl:col-span-12');
+                repView.classList.replace('xl:col-span-9', 'xl:col-span-12');
+                icon.setAttribute('data-lucide', 'panel-left-open');
+            }
+            if(window.lucide) lucide.createIcons();
+        }
+
         function switchView(view) {
             const dashboardView = document.getElementById('dashboardView');
             const reportView = document.getElementById('reportView');
@@ -596,18 +635,18 @@
             const navRep = document.getElementById('nav-report');
 
             if (view === 'dashboard') {
-                dashboardView.classList.remove('hidden');
-                reportView.classList.add('hidden');
-                navDash.classList.add('active');
-                navRep.classList.remove('active');
+                if(dashboardView) dashboardView.classList.remove('hidden');
+                if(reportView) reportView.classList.add('hidden');
+                if(navDash) navDash.classList.add('active');
+                if(navRep) navRep.classList.remove('active');
             } else {
-                dashboardView.classList.add('hidden');
-                reportView.classList.remove('hidden');
-                navDash.classList.remove('active');
-                navRep.classList.add('active');
+                if(dashboardView) dashboardView.classList.add('hidden');
+                if(reportView) reportView.classList.remove('hidden');
+                if(navDash) navDash.classList.remove('active');
+                if(navRep) navRep.classList.add('active');
                 renderActionsTable();
             }
-            lucide.createIcons();
+            if(window.lucide) lucide.createIcons();
         }
 
         // --- Report Page Logic ---
@@ -715,15 +754,14 @@
         function renderActionsTable() {
             const tbody = document.getElementById('actionsTableBody');
             const emptyState = document.getElementById('actionsEmptyState');
+            if(!tbody) return;
             tbody.innerHTML = '';
 
-            // Captura valores dos filtros
             const filterDate = document.getElementById('rep-filter-date').value;
             const filterSystem = document.getElementById('rep-filter-system').value;
             const filterStatus = document.getElementById('rep-filter-status').value;
             const filterDeadline = document.getElementById('rep-filter-deadline').value;
 
-            // Aplica filtragem
             const filtered = registeredActions.filter(act => {
                 const matchesDate = !filterDate || act.date === filterDate;
                 const matchesSystem = !filterSystem || act.system === filterSystem;
@@ -733,10 +771,10 @@
             });
 
             if (filtered.length === 0) {
-                emptyState.classList.remove('hidden');
+                if(emptyState) emptyState.classList.remove('hidden');
                 return;
             }
-            emptyState.classList.add('hidden');
+            if(emptyState) emptyState.classList.add('hidden');
 
             filtered.forEach(act => {
                 const statusColor = act.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 
@@ -826,28 +864,31 @@
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
-            lucide.createIcons();
-            setupNotesAutoSave();
+            try {
+                if(window.lucide) lucide.createIcons();
+                setupNotesAutoSave();
 
-            directoryHandle = await getFromDB('last_dir_handle');
-            if (directoryHandle) {
-                document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
-                document.getElementById('refreshDirBtn').classList.remove('hidden');
-                lucide.createIcons();
-            }
+                directoryHandle = await getFromDB('last_dir_handle');
+                if (directoryHandle) {
+                    document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
+                    if(window.lucide) lucide.createIcons();
+                }
 
-            analysisEvidences = await getFromDB('analysis_evidences') || {};
-            registeredActions = await getFromDB('registered_actions') || [];
+                analysisEvidences = await getFromDB('analysis_evidences') || {};
+                registeredActions = await getFromDB('registered_actions') || [];
 
-            const savedData = await getFromDB('last_raw_data');
-            if (savedData) {
-                rawData = savedData;
-                headers = await getFromDB('last_headers') || [];
-                currentFileName = await getFromDB('last_filename') || '';
-                columnMapping = await getFromDB('last_mapping') || columnMapping;
-                updateAppState(true);
-                runDashboardAnalysis();
-                loadSavedNotes();
+                const savedData = await getFromDB('last_raw_data');
+                if (savedData) {
+                    rawData = savedData;
+                    headers = await getFromDB('last_headers') || [];
+                    currentFileName = await getFromDB('last_filename') || '';
+                    columnMapping = await getFromDB('last_mapping') || columnMapping;
+                    updateAppState(true);
+                    runDashboardAnalysis();
+                    loadSavedNotes();
+                }
+            } catch (err) {
+                console.warn("Inicialização segura concluída com avisos.");
             }
         });
 
@@ -878,10 +919,11 @@
             const fName = currentFileName.toUpperCase();
             const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
             const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} - ${note}`;
-            notesEl.value += newNoteEntry;
-            
-            if (currentFileName) {
-                localStorage.setItem('notes_' + currentFileName, notesEl.value);
+            if(notesEl) {
+                notesEl.value += newNoteEntry;
+                if (currentFileName) {
+                    localStorage.setItem('notes_' + currentFileName, notesEl.value);
+                }
             }
             
             showToast("Evidência guardada!", "success");
@@ -894,6 +936,7 @@
 
         function renderReportConfig() {
             const listEl = document.getElementById('reportElementsList'), previewEl = document.getElementById('layoutPreview');
+            if(!listEl || !previewEl) return;
             listEl.innerHTML = ''; previewEl.innerHTML = '';
             reportConfig.forEach(item => {
                 const card = document.createElement('div');
@@ -1004,40 +1047,139 @@
             } catch (err) { console.error(err); showToast("Erro no PDF.", "error"); } finally { exportArea.innerHTML = ''; btn.innerHTML = original; btn.disabled = false; lucide.createIcons(); }
         }
 
+        // Função de Fallback para seleção de pastas em ambientes restritos (como Canvas)
+        function handleFallbackFolder(input) {
+            const files = Array.from(input.files);
+            const container = document.getElementById('dirFileList');
+            if(!container) return;
+            container.innerHTML = '';
+            container.classList.remove('hidden');
+            const refreshBtn = document.getElementById('refreshDirBtn');
+            if(refreshBtn) refreshBtn.classList.remove('hidden');
+
+            const excelFiles = files.filter(f => ['.xlsx', '.xls', '.csv'].some(ex => f.name.toLowerCase().endsWith(ex)));
+            
+            excelFiles.forEach(file => {
+                const b = document.createElement('button');
+                b.setAttribute('data-filename', file.name);
+                b.className = "w-full text-left p-2 hover:bg-slate-50 border border-slate-100 rounded text-[10px] truncate flex items-center gap-2 transition-colors";
+                b.innerHTML = `<i data-lucide="file-text" class="w-3 h-3 text-slate-400"></i>${file.name}`;
+                b.onclick = () => processFile(file);
+                container.appendChild(b);
+            });
+            
+            if (window.lucide) lucide.createIcons();
+            if (excelFiles.length > 0) {
+                showToast(`${excelFiles.length} ficheiros carregados da pasta.`, "success");
+            } else {
+                showToast("Nenhum ficheiro Excel/CSV encontrado na pasta.", "info");
+            }
+        }
+
         async function selectLocalDirectory() {
-            try { directoryHandle = await window.showDirectoryPicker(); await saveToDB('last_dir_handle', directoryHandle); document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local'; await scanDirectory(); } catch(e){}
+            // Verifica se o navegador suporta a API de Picker
+            if (!window.showDirectoryPicker) {
+                document.getElementById('folderInputFallback').click();
+                return;
+            }
+
+            try {
+                // Tenta usar a API moderna direta (funciona se não estiver em sub-frame bloqueado)
+                directoryHandle = await window.showDirectoryPicker({ mode: 'read' });
+                await saveToDB('last_dir_handle', directoryHandle); 
+                document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local'; 
+                await scanDirectory(true); 
+                showToast("Pasta mapeada com sucesso!", "success");
+            } catch(e) {
+                console.warn("Erro no Picker:", e.name);
+                // Deteta o erro específico de sub-frame ou permissão negada
+                if (e.name === 'SecurityError' || e.name === 'NotAllowedError') {
+                    // Aciona o fallback manual compatível com sub-frames cross-origin
+                    document.getElementById('folderInputFallback').click();
+                } else if (e.name !== 'AbortError') {
+                    showToast("Erro ao aceder à pasta.", "error");
+                }
+            }
         }
 
         async function verifyPermission(handle) {
-            const options = { mode: 'read' }; if ((await handle.queryPermission(options)) === 'granted') return true; if ((await handle.requestPermission(options)) === 'granted') return true; return false;
+            if (!handle) return false;
+            try {
+                const options = { mode: 'read' }; 
+                if ((await handle.queryPermission(options)) === 'granted') return true; 
+                if ((await handle.requestPermission(options)) === 'granted') return true; 
+            } catch (err) {
+                console.error("Erro ao verificar permissões:", err);
+            }
+            return false;
         }
 
-        async function scanDirectory() {
-            if (!directoryHandle) return; const isGranted = await verifyPermission(directoryHandle); if (!isGranted) { showToast("Permissão negada.", "error"); return; }
-            const container = document.getElementById('dirFileList'); container.innerHTML = ''; container.classList.remove('hidden'); document.getElementById('refreshDirBtn').classList.remove('hidden');
+        async function scanDirectory(skipPermissionCheck = false) {
+            if (!directoryHandle) return; 
+            
             try {
-                for await (const entry of directoryHandle.values()) {
-                    if (entry.kind === 'file' && ['.xlsx', '.xls', '.csv'].some(ex => entry.name.toLowerCase().endsWith(ex))) {
-                        const b = document.createElement('button'); b.setAttribute('data-filename', entry.name); b.className = "w-full text-left p-2 hover:bg-slate-50 border border-slate-100 rounded text-[10px] truncate flex items-center gap-2 transition-colors";
-                        b.innerHTML = `<i data-lucide=\"file-text\" class=\"w-3 h-3 text-slate-400\"></i>${entry.name}`; b.onclick = async () => processFile(await entry.getFile()); container.appendChild(b);
+                if (!skipPermissionCheck) {
+                    const isGranted = await verifyPermission(directoryHandle); 
+                    if (!isGranted) { 
+                        showToast("Permissão de leitura negada.", "error"); 
+                        return; 
                     }
                 }
-                highlightActiveFile(); lucide.createIcons();
-            } catch (err) { showToast("Erro ao ler pasta.", "error"); }
+
+                const container = document.getElementById('dirFileList'); 
+                if(!container) return;
+                container.innerHTML = ''; 
+                container.classList.remove('hidden'); 
+                const refreshBtn = document.getElementById('refreshDirBtn');
+                if(refreshBtn) refreshBtn.classList.remove('hidden');
+
+                for await (const entry of directoryHandle.values()) {
+                    try {
+                        if (entry.kind === 'file' && ['.xlsx', '.xls', '.csv'].some(ex => entry.name.toLowerCase().endsWith(ex))) {
+                            const b = document.createElement('button'); 
+                            b.setAttribute('data-filename', entry.name); 
+                            b.className = "w-full text-left p-2 hover:bg-slate-50 border border-slate-100 rounded text-[10px] truncate flex items-center gap-2 transition-colors";
+                            b.innerHTML = `<i data-lucide=\"file-text\" class=\"w-3 h-3 text-slate-400\"></i>${entry.name}`; 
+                            b.onclick = async () => {
+                                try {
+                                    const file = await entry.getFile();
+                                    processFile(file);
+                                } catch (err) {
+                                    showToast("Erro ao abrir ficheiro.", "error");
+                                }
+                            };
+                            container.appendChild(b);
+                        }
+                    } catch (entryErr) {
+                        console.warn("Falha ao ler entrada específica:", entryErr);
+                    }
+                }
+                highlightActiveFile(); 
+                lucide.createIcons();
+            } catch (err) { 
+                console.error("Erro no scanDirectory:", err);
+                showToast("Erro ao ler conteúdo da pasta.", "error"); 
+            }
         }
 
         async function processFile(file) {
-            if (!file) return; const reader = new FileReader();
+            if (!file) return; 
+            const reader = new FileReader();
             reader.onload = async e => {
-                const dataRaw = new Uint8Array(e.target.result), wb = XLSX.read(dataRaw, { type: 'array', cellDates: true });
-                let initialData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-                if (initialData.length > 0) {
-                    const seen = new Set(); rawData = initialData.filter(row => { const key = JSON.stringify(row); return seen.has(key) ? false : seen.add(key); });
-                    headers = Object.keys(rawData[0]); currentFileName = file.name; guessMappings();
-                    await saveToDB('last_raw_data', rawData); await saveToDB('last_headers', headers); await saveToDB('last_filename', currentFileName); await saveToDB('last_mapping', columnMapping);
-                    updateAppState(true); runDashboardAnalysis(); loadSavedNotes();
+                try {
+                    const dataRaw = new Uint8Array(e.target.result), wb = XLSX.read(dataRaw, { type: 'array', cellDates: true });
+                    let initialData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+                    if (initialData.length > 0) {
+                        const seen = new Set(); rawData = initialData.filter(row => { const key = JSON.stringify(row); return seen.has(key) ? false : seen.add(key); });
+                        headers = Object.keys(rawData[0]); currentFileName = file.name; guessMappings();
+                        await saveToDB('last_raw_data', rawData); await saveToDB('last_headers', headers); await saveToDB('last_filename', currentFileName); await saveToDB('last_mapping', columnMapping);
+                        updateAppState(true); runDashboardAnalysis(); loadSavedNotes();
+                    }
+                } catch (err) {
+                    showToast("Erro ao processar conteúdo do Excel.", "error");
                 }
             };
+            reader.onerror = () => showToast("Erro ao ler dados do ficheiro.", "error");
             reader.readAsArrayBuffer(file);
         }
 
@@ -1049,29 +1191,47 @@
         }
 
         function highlightActiveFile() {
-            const list = document.getElementById('dirFileList'); const buttons = list.querySelectorAll('button');
+            const list = document.getElementById('dirFileList'); if(!list) return;
+            const buttons = list.querySelectorAll('button');
             buttons.forEach(btn => { if (btn.getAttribute('data-filename') === currentFileName) btn.classList.add('file-item-active'); else btn.classList.remove('file-item-active'); });
         }
 
         function updateAppState(has) {
             const ids = ['fileInfo', 'statusSection', 'dashboardContainer', 'pdfBtn'];
-            ids.forEach(id => document.getElementById(id).classList.toggle('hidden', !has));
-            document.getElementById('emptyState').classList.toggle('hidden', has);
-            document.getElementById('fileName').textContent = currentFileName;
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', !has);
+            });
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) emptyState.classList.toggle('hidden', has);
+            
+            const fileNameEl = document.getElementById('fileName');
+            if (fileNameEl) fileNameEl.textContent = currentFileName;
+
             const lastUpdateTag = document.getElementById('lastUpdateTag'), lastUpdateText = document.getElementById('lastUpdateText');
             if (has) {
                 const now = new Date(), timeStr = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }), dateStr = now.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
-                lastUpdateText.textContent = `${dateStr} às ${timeStr}`; lastUpdateTag.classList.remove('hidden'); lastUpdateTag.classList.add('flex');
+                if (lastUpdateText) lastUpdateText.textContent = `${dateStr} às ${timeStr}`; 
+                if (lastUpdateTag) {
+                    lastUpdateTag.classList.remove('hidden'); 
+                    lastUpdateTag.classList.add('flex');
+                }
                 highlightActiveFile(); renderDetectedCols();
                 const titleEl = document.getElementById('balanceTableTitle'), headerEl = document.getElementById('idColumnHeader'), fName = currentFileName.toUpperCase();
                 if (fName.includes('ASN')) { if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - ASN'; if(headerEl) headerEl.textContent = 'ASN (ID)'; }
                 else if (fName.includes('OEXP')) { if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - Ordem de expedição'; if(headerEl) headerEl.textContent = 'OEXP (ID)'; }
-            } else { lastUpdateTag.classList.add('hidden'); lastUpdateTag.classList.remove('flex'); }
-            lucide.createIcons();
+            } else { 
+                if (lastUpdateTag) {
+                    lastUpdateTag.classList.add('hidden'); 
+                    lastUpdateTag.classList.remove('flex'); 
+                }
+            }
+            if(window.lucide) lucide.createIcons();
         }
 
         function renderDetectedCols() {
-            const c = document.getElementById('detectedCols'); c.innerHTML = '';
+            const c = document.getElementById('detectedCols'); if(!c) return;
+            c.innerHTML = '';
             Object.entries(columnMapping).forEach(([k, v]) => { if(v) c.innerHTML += `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] border border-blue-200">${k}: ${v}</span>`; });
         }
 
@@ -1096,11 +1256,11 @@
         function setupDateFilters() {
             const dateStartInput = document.getElementById('dateStart'), dateEndInput = document.getElementById('dateEnd'), lineViewSelector = document.getElementById('lineViewSelector');
             const savedStart = localStorage.getItem('persist_dateStart'), savedEnd = localStorage.getItem('persist_dateEnd'), savedView = localStorage.getItem('persist_lineView');
-            if (savedView) lineViewSelector.value = savedView;
-            if (savedStart && savedEnd) { dateStartInput.value = savedStart; dateEndInput.value = savedEnd; return; }
+            if (savedView && lineViewSelector) lineViewSelector.value = savedView;
+            if (savedStart && savedEnd && dateStartInput && dateEndInput) { dateStartInput.value = savedStart; dateEndInput.value = savedEnd; return; }
             const col = columnMapping['data']; if(!col) return;
             const dates = rawData.map(r => getSafeDate(r[col])).filter(d => d);
-            if(dates.length) { const min = dates.reduce((a, b) => a < b ? a : b), max = dates.reduce((a, b) => a > b ? a : b); dateStartInput.value = formatDateToISO(min); dateEndInput.value = formatDateToISO(max); }
+            if(dates.length) { const min = dates.reduce((a, b) => a < b ? a : b), max = dates.reduce((a, b) => a > b ? a : b); if(dateStartInput) dateStartInput.value = formatDateToISO(min); if(dateEndInput) dateEndInput.value = formatDateToISO(max); }
         }
 
         function getFilteredData() {
@@ -1124,15 +1284,17 @@
                 const c = getStatusCategory(r[sCol]); if(h >= 0 && h < 24 && cats[c]) cats[c].data[h]++;
             });
             const filteredDatasets = Object.entries(cats).filter(([_, obj]) => obj.data.some(val => val > 0)).map(([name, obj]) => ({ label: name, data: obj.data, borderColor: obj.color, backgroundColor: obj.color, tension: 0.3, pointRadius: 3, pointHoverRadius: 5 }));
-            const ctx = document.getElementById('lineChartCanvas').getContext('2d'); if(lineChart) lineChart.destroy();
-            lineChart = new Chart(ctx, {
+            const ctx = document.getElementById('lineChartCanvas'); if(!ctx) return;
+            if(lineChart) lineChart.destroy();
+            lineChart = new Chart(ctx.getContext('2d'), {
                 type: 'line', data: { labels: Array.from({length:24}, (_,i)=>`${String(i).padStart(2, '0')}:00`), datasets: filteredDatasets },
                 options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grace: '25%' } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { display: (context) => context.dataset.data[context.dataIndex] > 0, align: 'top', offset: 4, color: (context) => context.dataset.borderColor, font: { size: 10, weight: 'bold' }, formatter: (v) => v || '' } } }
             });
         }
 
         function renderBarChart() {
-            const ctx = document.getElementById('barChartCanvas').getContext('2d'); if(barChart) { barChart.destroy(); barChart = null; }
+            const canvas = document.getElementById('barChartCanvas'); if(!canvas) return;
+            const ctx = canvas.getContext('2d'); if(barChart) { barChart.destroy(); barChart = null; }
             const dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
             const agg = { 'WMS': { e_ok:0, e_err:0, e_pend:0, s_ok:0, s_err:0, s_pend:0 }, 'PROTHEUS': { e_ok:0, e_err:0, e_pend:0, s_ok:0, s_err:0, s_pend:0 } };
             const dirKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || 'Direção'), stKey = statCol || (headers.find(h => normalizeString(h).includes('status')) || 'Status'), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || ''), isOEXP = currentFileName.toUpperCase().includes('OEXP');
@@ -1160,8 +1322,9 @@
         }
 
         function renderDoughnutChart() {
+            const canvas = document.getElementById('doughnutChartCanvas'); if(!canvas) return;
             const col = columnMapping['status'], data = getFilteredData(), counts = {}; data.forEach(r => { const s = r[col] || 'N/A'; counts[s] = (counts[s]||0)+1; });
-            const labels = Object.keys(counts), bgColors = labels.map(l => colorsBase[getStatusCategory(l)] || colorsBase.Outros), ctx = document.getElementById('doughnutChartCanvas').getContext('2d');
+            const labels = Object.keys(counts), bgColors = labels.map(l => colorsBase[getStatusCategory(l)] || colorsBase.Outros), ctx = canvas.getContext('2d');
             if(doughnutChart) doughnutChart.destroy();
             doughnutChart = new Chart(ctx, {
                 type: 'doughnut', data: { labels, datasets: [{ data: Object.values(counts), backgroundColor: bgColors }]},
@@ -1171,7 +1334,8 @@
 
         function renderBalanceTable() {
             const idCol = columnMapping['id'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
-            const tbody = document.getElementById('balanceTableBody'); tbody.innerHTML = '';
+            const tbody = document.getElementById('balanceTableBody'); if(!tbody) return;
+            tbody.innerHTML = '';
             const limitVal = document.getElementById('tableLimit').value, limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
             const fId = normalizeString(document.getElementById('filter-id').value), fEnt = normalizeString(document.getElementById('filter-entradas').value), fSai = normalizeString(document.getElementById('filter-saidas').value), fDif = normalizeString(document.getElementById('filter-dif').value), fStat = normalizeString(document.getElementById('filter-status').value);
             const iKey = idCol || (headers.find(h => { const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem'); }) || headers[0]);
@@ -1244,22 +1408,29 @@
             showToast("Exportação concluída!", "success");
         }
 
-        function setupNotesAutoSave() { const f = document.getElementById('notesField'); f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value); }
-        function loadSavedNotes() { document.getElementById('notesField').value = localStorage.getItem('notes_' + currentFileName) || ''; }
+        function setupNotesAutoSave() { const f = document.getElementById('notesField'); if (f) f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value); }
+        function loadSavedNotes() { const f = document.getElementById('notesField'); if (f) f.value = localStorage.getItem('notes_' + currentFileName) || ''; }
 
         async function resetApp() {
             rawData = []; headers = []; currentFileName = ''; analysisEvidences = {};
             localStorage.removeItem('persist_dateStart'); localStorage.removeItem('persist_dateEnd'); localStorage.removeItem('persist_lineView');
             await removeFromDB('last_raw_data'); await removeFromDB('last_headers'); await removeFromDB('last_filename'); await removeFromDB('last_mapping'); await removeFromDB('analysis_evidences');
-            document.getElementById('dateStart').value = ''; document.getElementById('dateEnd').value = ''; document.getElementById('lineViewSelector').value = 'all'; document.getElementById('filter-id').value = '';
+            const dS = document.getElementById('dateStart'); if(dS) dS.value = '';
+            const dE = document.getElementById('dateEnd'); if(dE) dE.value = '';
+            const lV = document.getElementById('lineViewSelector'); if(lV) lV.value = 'all';
+            const fI = document.getElementById('filter-id'); if(fI) fI.value = '';
             updateAppState(false); if(lineChart) lineChart.destroy(); if(barChart) barChart.destroy(); if(doughnutChart) doughnutChart.destroy();
         }
 
         function showToast(msg, type = "info") {
-            const t = document.getElementById('toast'); t.innerHTML = `<span>${msg}</span>`;
+            const t = document.getElementById('toast'); if (!t) return;
+            t.innerHTML = `<span>${msg}</span>`;
             const bg = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-slate-800');
             t.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl text-white text-sm z-50 transition-all duration-300 translate-y-0 opacity-100 ${bg}`;
-            setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-24', 'opacity-0'); }, 3000);
+            setTimeout(() => { 
+                t.classList.remove('translate-y-0', 'opacity-100'); 
+                t.classList.add('translate-y-24', 'opacity-0'); 
+            }, 3000);
         }
     </script>
 </body>
