@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -70,6 +70,13 @@
             width: 100%; font-size: 10px; padding: 2px 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-weight: normal; color: #475569; outline: none; transition: border-color 0.2s;
         }
         .table-filter-input:focus { border-color: #3b82f6; background-color: #fff; }
+
+        .nav-link { transition: all 0.2s; position: relative; }
+        .nav-link.active { color: #2563eb; }
+        .nav-link.active::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: #2563eb; border-radius: 2px; }
+
+        .clickable-row-cell { cursor: pointer; transition: background-color 0.2s; }
+        .clickable-row-cell:hover { background-color: #f8fafc; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
@@ -82,13 +89,21 @@
                         <i data-lucide="layout-dashboard" class="text-blue-600"></i>
                         Dashboard Analítico
                     </h1>
-                    <!-- Tag de Última Atualização Refinada -->
                     <div id="lastUpdateTag" class="hidden flex items-center gap-1.5 px-2.5 py-1 bg-white text-slate-500 text-[10px] font-semibold rounded-full border border-slate-200 shadow-sm animate-in fade-in slide-in-from-left-2 duration-500">
                         <i data-lucide="clock" class="w-3 h-3 text-blue-500"></i>
                         <span id="lastUpdateText"></span>
                     </div>
                 </div>
-                <p class="text-sm text-slate-500">Análise automática de operações, status e balanço (Com Auditoria de Erros).</p>
+                
+                <!-- Navegação Principal -->
+                <nav class="flex items-center gap-6 mt-2">
+                    <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-link active text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Dashboard
+                    </button>
+                    <button onclick="switchView('report')" id="nav-report" class="nav-link text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> Report
+                    </button>
+                </nav>
             </div>
             
             <div class="flex items-center gap-3">
@@ -106,15 +121,16 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            <div class="xl:col-span-3 space-y-6">
+        <div id="main-content" class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <!-- Sidebar Compartilhada -->
+            <div class="xl:col-span-3 space-y-6 shrink-0">
                 <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="folder-search" class="w-4 h-4 text-orange-500"></i> Pasta Local (API)
                     </h2>
                     <div id="dirControls">
                         <button id="mainFolderBtn" onclick="selectLocalDirectory()" class="w-full py-3 px-4 bg-orange-50 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold hover:bg-orange-100 transition flex items-center justify-center gap-2">
-                            <i data-lucide="folder-plus" class="w-4 h-4"></i> Monitorar Pasta Local
+                            <i data-lucide="folder-plus" class="w-4 h-4"></i> Monitorizar Pasta Local
                         </button>
                     </div>
                     <div id="dirFileList" class="hidden mt-4 space-y-2 max-h-48 overflow-y-auto custom-scrollbar p-1"></div>
@@ -132,7 +148,8 @@
                 </section>
             </div>
 
-            <div id="dashboardArea" class="xl:col-span-9 space-y-6">
+            <!-- Dashboard View -->
+            <div id="dashboardView" class="xl:col-span-9 space-y-6">
                 <div id="emptyState" class="bg-white rounded-xl border-2 border-dashed border-slate-200 h-[500px] flex flex-col items-center justify-center text-slate-400">
                     <i data-lucide="bar-chart-big" class="w-16 h-16 mb-4 text-slate-300"></i>
                     <p class="text-lg font-medium text-slate-500">Aguardando dados</p>
@@ -142,7 +159,7 @@
                     <section id="section-timeline" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                             <h2 class="text-base font-semibold flex items-center gap-2">
-                                <i data-lucide="line-chart" class="w-4 h-4 text-blue-500"></i> Volume Horário por Data e Status
+                                <i data-lucide="line-chart" class="w-4 h-4 text-blue-500"></i> Volume Horário por Data e Estado
                             </h2>
                             <div class="flex items-center gap-2 text-sm">
                                 <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-md border border-slate-200 mr-2">
@@ -173,7 +190,7 @@
 
                         <section id="section-doughnut" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                             <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
-                                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-500"></i> Distribuição de Status
+                                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-500"></i> Distribuição de Estados
                             </h2>
                             <div class="h-[300px] relative flex items-center justify-center">
                                 <canvas id="doughnutChartCanvas"></canvas>
@@ -210,15 +227,15 @@
                                             <th class="px-4 py-2 font-semibold border-b text-center text-green-600">Entradas (OK)</th>
                                             <th class="px-4 py-2 font-semibold border-b text-center text-blue-600">Saídas (OK)</th>
                                             <th class="px-4 py-2 font-semibold border-b text-center bg-slate-100">Diferença (OK)</th>
-                                            <th class="px-4 py-2 font-semibold border-b text-center text-red-500">Status de Erro</th>
+                                            <th class="px-4 py-2 font-semibold border-b text-center text-red-500">Estado de Erro</th>
                                             <th class="px-4 py-2 font-semibold border-b text-center text-slate-400">Ação</th>
                                         </tr>
                                         <tr class="bg-white">
-                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-id" class="table-filter-input" placeholder="Buscar ID..." oninput="renderBalanceTable()"></th>
+                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-id" class="table-filter-input" placeholder="Pesquisar ID..." oninput="renderBalanceTable()"></th>
                                             <th class="px-2 py-1 border-b"><input type="text" id="filter-entradas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
                                             <th class="px-2 py-1 border-b"><input type="text" id="filter-saidas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
                                             <th class="px-2 py-1 border-b"><input type="text" id="filter-dif" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
-                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-status" class="table-filter-input text-center" placeholder="Filtrar status..." oninput="renderBalanceTable()"></th>
+                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-status" class="table-filter-input text-center" placeholder="Filtrar estado..." oninput="renderBalanceTable()"></th>
                                             <th class="px-2 py-1 border-b"></th>
                                         </tr>
                                     </thead>
@@ -236,10 +253,203 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Report View -->
+            <div id="reportView" class="hidden xl:col-span-9 space-y-6">
+                <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <i data-lucide="scroll-text" class="text-blue-600"></i> Relatório de Ações Registadas
+                            </h2>
+                            <p class="text-sm text-slate-500">Gestão e acompanhamento de intervenções e correções de dados.</p>
+                        </div>
+                        <button onclick="openActionModal()" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 flex items-center gap-2 active:scale-95">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i> Registar Nova Ação
+                        </button>
+                    </div>
+
+                    <!-- Filtros do Report (Ajustados para visibilidade máxima) -->
+                    <div class="mb-6 p-5 bg-slate-50 border border-slate-200 rounded-xl shadow-inner">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Filtrar Relatórios</h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data Registro</label>
+                                <input type="date" id="rep-filter-date" oninput="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sistema</label>
+                                <select id="rep-filter-system" onchange="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="">Todos</option>
+                                    <option value="Protheus">Protheus</option>
+                                    <option value="WMS">WMS</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Estado</label>
+                                <select id="rep-filter-status" onchange="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="">Todos</option>
+                                    <option value="Concluído">Concluído</option>
+                                    <option value="Em Análise">Em Análise</option>
+                                    <option value="Pendente">Pendente</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Prazo (Conclusão)</label>
+                                <input type="date" id="rep-filter-deadline" oninput="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="clearReportFilters()" class="w-full py-2 bg-white border border-slate-200 text-[10px] font-bold text-slate-600 rounded-lg hover:bg-slate-100 transition flex items-center justify-center gap-1 active:scale-95">
+                                    <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-500"></i> Limpar Filtros
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border rounded-xl">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-slate-600">
+                                <tr>
+                                    <th class="px-6 py-4 font-bold border-b">Data</th>
+                                    <th class="px-6 py-4 font-bold border-b">Sistema</th>
+                                    <th class="px-6 py-4 font-bold border-b">Responsável</th>
+                                    <th class="px-6 py-4 font-bold border-b">Ação / Solução</th>
+                                    <th class="px-6 py-4 font-bold border-b text-center">Prazo</th>
+                                    <th class="px-6 py-4 font-bold border-b text-center">Estado</th>
+                                    <th class="px-6 py-4 font-bold border-b text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="actionsTableBody" class="divide-y divide-slate-100">
+                                <!-- Conteúdo gerado via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="actionsEmptyState" class="py-20 flex flex-col items-center justify-center text-slate-400">
+                        <i data-lucide="clipboard-list" class="w-12 h-12 mb-2 opacity-20"></i>
+                        <p class="text-sm">Nenhuma ação encontrada.</p>
+                    </div>
+                </section>
+            </div>
         </div>
     </div>
 
-    <!-- Modal de Evidência de Análise -->
+    <!-- Modal de Detalhes da Ação -->
+    <div id="detailsModal" class="hidden fixed inset-0 z-[130] modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-indigo-50 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">
+                    <i data-lucide="info" class="text-indigo-600"></i> Detalhes da Ação
+                </h3>
+                <button onclick="closeDetailsModal()" class="text-indigo-400 hover:text-indigo-600 transition"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Título</label>
+                    <div id="detTitle" class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Sistema</label>
+                        <div id="detSystem" class="text-sm font-semibold px-2 py-1 rounded bg-slate-100 w-fit text-indigo-700"></div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ID Ref.</label>
+                        <div id="detRef" class="text-sm font-mono text-slate-600"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Descrição / Ação</label>
+                    <div id="detDesc" class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100"></div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <i data-lucide="check-circle" class="w-3 h-3"></i> Solução / Resolução
+                    </label>
+                    <div id="detResolution" class="text-sm text-emerald-700 leading-relaxed bg-emerald-50 p-4 rounded-lg border border-emerald-100 font-medium"></div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 flex items-center justify-end">
+                <button onclick="closeDetailsModal()" class="px-8 py-2 bg-slate-800 text-white text-sm font-bold rounded-lg hover:bg-slate-900 transition">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registo de Ações -->
+    <div id="actionModal" class="hidden fixed inset-0 z-[120] modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                <h3 id="actionModalTitle" class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="plus-square" class="text-blue-600"></i> Novo Registo de Ação
+                </h3>
+                <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x"></i></button>
+            </div>
+            <form id="actionForm" onsubmit="saveAction(event)" class="p-6 space-y-4 overflow-y-auto custom-scrollbar grow">
+                <input type="hidden" id="actId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Título da Ação</label>
+                    <input type="text" id="actTitle" required placeholder="Ex: Correção de ASN Pendente" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Data da Ação</label>
+                        <input type="date" id="actDate" required class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">ID Referência (ASN/OEXP)</label>
+                        <input type="text" id="actRef" placeholder="Ex: 12345" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Sistema Envolvido</label>
+                        <select id="actSystem" required class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="" disabled selected>Escolha o sistema...</option>
+                            <option value="Protheus">Protheus</option>
+                            <option value="WMS">WMS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Data de Conclusão (Prazo)</label>
+                        <input type="date" id="actDeadline" required class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Responsável</label>
+                    <input type="text" id="actUser" required placeholder="Nome do colaborador" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Estado</label>
+                    <select id="actStatus" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="Concluído">Concluído</option>
+                        <option value="Em Análise">Em Análise</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Descrição da Ação</label>
+                    <textarea id="actDesc" required rows="2" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Descreva os detalhes da intervenção..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Solução / Resolução</label>
+                    <textarea id="actResolution" rows="2" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none resize-none" placeholder="Qual foi a solução final ou resolução aplicada?"></textarea>
+                </div>
+            </form>
+            <div class="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeActionModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Descartar</button>
+                <button type="submit" form="actionForm" class="px-8 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-100 transition flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Guardar Registo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Evidência de Análise (Original Dashboard) -->
     <div id="evidenceModal" class="hidden fixed inset-0 z-[110] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
@@ -253,24 +463,25 @@
                 <div id="evidenceTargetId" class="text-sm font-mono bg-slate-100 p-2 rounded border border-slate-200 mb-4 text-slate-700"></div>
                 
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota de Evidência / Análise</label>
-                <textarea id="evidenceNote" class="w-full h-32 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none outline-none bg-slate-50 transition-all" placeholder="Digite aqui o resultado da sua análise para este ID..."></textarea>
-                <p class="text-[10px] text-slate-400 mt-2 italic">* Ao salvar, este comentário será movido para a seção de Notas e o item sairá desta tabela.</p>
+                <textarea id="evidenceNote" class="w-full h-32 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none outline-none bg-slate-50 transition-all" placeholder="Escreva aqui o resultado da sua análise para este ID..."></textarea>
+                <p class="text-[10px] text-slate-400 mt-2 italic">* Ao guardar, este comentário será movido para a secção de Notas e o item sairá desta tabela.</p>
             </div>
             <div class="p-6 bg-slate-50 flex items-center justify-end gap-3">
                 <button onclick="closeEvidenceModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
                 <button onclick="saveEvidence()" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition flex items-center gap-2">
-                    <i data-lucide="save" class="w-4 h-4"></i> Salvar e Limpar
+                    <i data-lucide="save" class="w-4 h-4"></i> Guardar e Limpar
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Relatório PDF Modal -->
     <div id="reportModal" class="hidden fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
             <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">Configurar Exportação</h2>
-                    <p class="text-sm text-slate-500">Personalize o layout e os elementos do seu relatório PDF.</p>
+                    <p class="text-sm text-slate-500">Personalize o esquema e os elementos do seu relatório PDF.</p>
                 </div>
                 <button onclick="closeReportModal()" class="p-2 hover:bg-slate-200 rounded-full transition text-slate-400">
                     <i data-lucide="x" class="w-6 h-6"></i>
@@ -312,9 +523,10 @@
         let headers = [];
         let currentFileName = '';
         let directoryHandle = null; 
-        let analysisEvidences = {}; // Armazena as notas por ID
+        let analysisEvidences = {}; 
         let currentEvidenceId = null;
-        
+        let registeredActions = []; 
+
         let lineChart = null;
         let barChart = null;
         let doughnutChart = null;
@@ -322,7 +534,7 @@
         let reportConfig = [
             { id: 'section-timeline', title: 'Volume Horário', icon: 'line-chart', active: true, page: 1, width: 'full' },
             { id: 'section-bar', title: 'Comparativo E/S', icon: 'bar-chart-3', active: true, page: 2, width: 'half' },
-            { id: 'section-doughnut', title: 'Distribuição Status', icon: 'pie-chart', active: true, page: 2, width: 'half' },
+            { id: 'section-doughnut', title: 'Distribuição Estados', icon: 'pie-chart', active: true, page: 2, width: 'half' },
             { id: 'section-notes', title: 'Notas de Análise', icon: 'clipboard-edit', active: true, page: 2, width: 'full' },
             { id: 'section-table', title: 'Tabela de Balanço', icon: 'table', active: false, page: 3, width: 'full' }
         ];
@@ -343,7 +555,7 @@
 
         async function getDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 2); 
+                const request = indexedDB.open(DB_NAME, 7); 
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -375,6 +587,199 @@
             tx.objectStore(STORE_NAME).delete(key);
             return new Promise((resolve) => tx.oncomplete = resolve);
         }
+
+        // --- Navegação ---
+        function switchView(view) {
+            const dashboardView = document.getElementById('dashboardView');
+            const reportView = document.getElementById('reportView');
+            const navDash = document.getElementById('nav-dashboard');
+            const navRep = document.getElementById('nav-report');
+
+            if (view === 'dashboard') {
+                dashboardView.classList.remove('hidden');
+                reportView.classList.add('hidden');
+                navDash.classList.add('active');
+                navRep.classList.remove('active');
+            } else {
+                dashboardView.classList.add('hidden');
+                reportView.classList.remove('hidden');
+                navDash.classList.remove('active');
+                navRep.classList.add('active');
+                renderActionsTable();
+            }
+            lucide.createIcons();
+        }
+
+        // --- Report Page Logic ---
+
+        function clearReportFilters() {
+            document.getElementById('rep-filter-date').value = '';
+            document.getElementById('rep-filter-system').value = '';
+            document.getElementById('rep-filter-status').value = '';
+            document.getElementById('rep-filter-deadline').value = '';
+            renderActionsTable();
+            showToast("Filtros limpos.", "info");
+        }
+
+        function openDetailsModal(id) {
+            const act = registeredActions.find(a => a.id === id);
+            if (!act) return;
+
+            document.getElementById('detTitle').textContent = act.title || 'Sem Título';
+            document.getElementById('detSystem').textContent = act.system || 'N/A';
+            document.getElementById('detRef').textContent = act.ref || 'N/A';
+            document.getElementById('detDesc').textContent = act.desc || 'Sem descrição.';
+            document.getElementById('detResolution').textContent = act.resolution || 'Nenhuma resolução registada ainda.';
+            
+            document.getElementById('detailsModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.add('hidden');
+        }
+
+        function openActionModal(id = null) {
+            const form = document.getElementById('actionForm');
+            const modalTitle = document.getElementById('actionModalTitle');
+            form.reset();
+            
+            if (id) {
+                const act = registeredActions.find(a => a.id === id);
+                if (act) {
+                    modalTitle.innerHTML = '<i data-lucide="edit-3" class="text-blue-600"></i> Editar Registo de Ação';
+                    document.getElementById('actId').value = act.id;
+                    document.getElementById('actTitle').value = act.title || '';
+                    document.getElementById('actDate').value = act.date || '';
+                    document.getElementById('actRef').value = act.ref || '';
+                    document.getElementById('actSystem').value = act.system || '';
+                    document.getElementById('actDeadline').value = act.deadline || '';
+                    document.getElementById('actUser').value = act.user || '';
+                    document.getElementById('actStatus').value = act.status || 'Pendente';
+                    document.getElementById('actDesc').value = act.desc || '';
+                    document.getElementById('actResolution').value = act.resolution || '';
+                }
+            } else {
+                modalTitle.innerHTML = '<i data-lucide="plus-square" class="text-blue-600"></i> Novo Registo de Ação';
+                document.getElementById('actId').value = '';
+                document.getElementById('actDate').value = formatDateToISO(new Date());
+                document.getElementById('actDeadline').value = formatDateToISO(new Date());
+            }
+            
+            document.getElementById('actionModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeActionModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+        }
+
+        async function saveAction(e) {
+            e.preventDefault();
+            const editId = document.getElementById('actId').value;
+            
+            const actionData = {
+                id: editId ? parseInt(editId) : Date.now(),
+                title: document.getElementById('actTitle').value,
+                date: document.getElementById('actDate').value,
+                ref: document.getElementById('actRef').value,
+                system: document.getElementById('actSystem').value,
+                deadline: document.getElementById('actDeadline').value,
+                user: document.getElementById('actUser').value,
+                status: document.getElementById('actStatus').value,
+                desc: document.getElementById('actDesc').value,
+                resolution: document.getElementById('actResolution').value
+            };
+
+            if (editId) {
+                const index = registeredActions.findIndex(a => a.id === parseInt(editId));
+                if (index !== -1) registeredActions[index] = actionData;
+                showToast("Registo atualizado!", "success");
+            } else {
+                registeredActions.unshift(actionData);
+                showToast("Ação registada!", "success");
+            }
+
+            await saveToDB('registered_actions', registeredActions);
+            closeActionModal();
+            renderActionsTable();
+        }
+
+        async function deleteAction(id) {
+            registeredActions = registeredActions.filter(a => a.id !== id);
+            await saveToDB('registered_actions', registeredActions);
+            renderActionsTable();
+            showToast("Registo removido.", "info");
+        }
+
+        function renderActionsTable() {
+            const tbody = document.getElementById('actionsTableBody');
+            const emptyState = document.getElementById('actionsEmptyState');
+            tbody.innerHTML = '';
+
+            // Captura valores dos filtros
+            const filterDate = document.getElementById('rep-filter-date').value;
+            const filterSystem = document.getElementById('rep-filter-system').value;
+            const filterStatus = document.getElementById('rep-filter-status').value;
+            const filterDeadline = document.getElementById('rep-filter-deadline').value;
+
+            // Aplica filtragem
+            const filtered = registeredActions.filter(act => {
+                const matchesDate = !filterDate || act.date === filterDate;
+                const matchesSystem = !filterSystem || act.system === filterSystem;
+                const matchesStatus = !filterStatus || act.status === filterStatus;
+                const matchesDeadline = !filterDeadline || act.deadline === filterDeadline;
+                return matchesDate && matchesSystem && matchesStatus && matchesDeadline;
+            });
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            filtered.forEach(act => {
+                const statusColor = act.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 
+                                  (act.status === 'Pendente' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
+                
+                const sysTag = act.system === 'Protheus' ? 'text-indigo-600' : 'text-orange-600';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4 font-mono text-xs text-slate-500">${act.date ? act.date.split('-').reverse().join('/') : '-'}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-slate-700">${act.ref || '-'}</div>
+                            <div class="text-[10px] uppercase font-black ${sysTag}">${act.system || 'N/A'}</div>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">${act.user}</td>
+                        <td onclick="openDetailsModal(${act.id})" class="px-6 py-4 text-slate-600 clickable-row-cell">
+                            <div class="text-xs font-black text-slate-800 uppercase tracking-tight mb-0.5">${act.title || 'Sem Título'}</div>
+                            <div class="max-w-xs truncate text-[11px] text-slate-500" title="Clique para ver detalhes">${act.desc}</div>
+                            ${act.resolution ? `<div class="text-[10px] text-emerald-600 mt-1 italic truncate max-w-xs"><strong>Solução:</strong> ${act.resolution}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 text-center font-mono text-xs text-slate-500">${act.deadline ? act.deadline.split('-').reverse().join('/') : '-'}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}">
+                                ${act.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openActionModal(${act.id})" class="text-slate-300 hover:text-blue-500 transition p-1" title="Editar">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteAction(${act.id})" class="text-slate-300 hover:text-red-500 transition p-1" title="Eliminar">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // --- Core Functions (Dashboard) ---
 
         function getSafeDate(val) {
             if (!val) return null;
@@ -432,6 +837,7 @@
             }
 
             analysisEvidences = await getFromDB('analysis_evidences') || {};
+            registeredActions = await getFromDB('registered_actions') || [];
 
             const savedData = await getFromDB('last_raw_data');
             if (savedData) {
@@ -445,7 +851,6 @@
             }
         });
 
-        // --- Modais ---
         function openReportModal() { renderReportConfig(); document.getElementById('reportModal').classList.remove('hidden'); lucide.createIcons(); }
         function closeReportModal() { document.getElementById('reportModal').classList.add('hidden'); }
         
@@ -460,34 +865,26 @@
 
         async function saveEvidence() {
             const note = document.getElementById('evidenceNote').value.trim();
-            if(!note) { showToast("Por favor, digite uma nota de análise.", "error"); return; }
+            if(!note) { showToast("Escreva uma nota.", "error"); return; }
             
             const timestamp = new Date().toISOString();
-            const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            const timeStr = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
 
-            analysisEvidences[currentEvidenceId] = {
-                note: note,
-                timestamp: timestamp
-            };
-            
+            analysisEvidences[currentEvidenceId] = { note: note, timestamp: timestamp };
             await saveToDB('analysis_evidences', analysisEvidences);
 
-            // --- NOVO: Transferir para a seção de Notas ---
             const notesEl = document.getElementById('notesField');
             const fName = currentFileName.toUpperCase();
             const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
-            
             const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} - ${note}`;
             notesEl.value += newNoteEntry;
             
-            // Forçar o salvamento das Notas no localStorage
             if (currentFileName) {
                 localStorage.setItem('notes_' + currentFileName, notesEl.value);
             }
-            // ----------------------------------------------
             
-            showToast("Evidência salva e adicionada às Notas!", "success");
+            showToast("Evidência guardada!", "success");
             closeEvidenceModal();
             renderBalanceTable(); 
         }
@@ -555,7 +952,7 @@
             const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a4' });
             const activeItems = reportConfig.filter(i => i.active), pages = [...new Set(activeItems.map(i => i.page))].sort();
             try {
-                const dateStart = document.getElementById('dateStart').value, dateEnd = document.getElementById('dateEnd').value, emissionDate = new Date().toLocaleString('pt-BR');
+                const dateStart = document.getElementById('dateStart').value, dateEnd = document.getElementById('dateEnd').value, emissionDate = new Date().toLocaleString('pt-PT');
                 let pdfTitle = "Relatório Analítico de Integrações";
                 const upperName = currentFileName.toUpperCase();
                 if (upperName.includes('ASN')) pdfTitle += " - ASN"; else if (upperName.includes('OEXP')) pdfTitle += " - Ordem de Expedição";
@@ -570,7 +967,7 @@
                                         <span>PERÍODO: <strong style="color: #f1f5f9;">${dateStart} — ${dateEnd}</strong></span>
                                         <span>PÁGINA: <strong style="color: #f1f5f9;">${i+1} de ${pages.length}</strong></span>
                                     </div>
-                                    <span style="color: #64748b; font-size: 11px; font-weight: 600;">ARQUIVO: ${currentFileName}</span>
+                                    <span style="color: #64748b; font-size: 11px; font-weight: 600;">FICHEIRO: ${currentFileName}</span>
                                 </div>
                             </div>
                             <div id="pdf-grid-container" style="padding: 30px 40px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; justify-content: flex-start; text-align: left;"></div>
@@ -590,7 +987,7 @@
                             contentDiv.appendChild(newCanvas);
                         } else if (item.id === 'section-notes') {
                             contentDiv.style.padding = "10px 0"; contentDiv.style.fontSize = "16px"; contentDiv.style.color = "#451a03"; contentDiv.style.whiteSpace = "pre-wrap"; contentDiv.style.lineHeight = "1.6";
-                            contentDiv.textContent = document.getElementById('notesField').value || 'Nenhuma observação registrada.';
+                            contentDiv.textContent = document.getElementById('notesField').value || 'Nenhuma observação registada.';
                         } else if (item.id === 'section-table') {
                             const tableClone = originalSection.querySelector('table').cloneNode(true);
                             const filterRow = tableClone.querySelector('thead tr:nth-child(2)'); if(filterRow) filterRow.remove();
@@ -603,12 +1000,12 @@
                 }
                 const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
                 doc.save(`Relatorio_Integracoes_${timestamp}.pdf`);
-                showToast("Relatório PDF de Integrações gerado com sucesso!", "success"); closeReportModal();
-            } catch (err) { console.error(err); showToast("Erro na geração do PDF.", "error"); } finally { exportArea.innerHTML = ''; btn.innerHTML = original; btn.disabled = false; lucide.createIcons(); }
+                showToast("Relatório PDF gerado!", "success"); closeReportModal();
+            } catch (err) { console.error(err); showToast("Erro no PDF.", "error"); } finally { exportArea.innerHTML = ''; btn.innerHTML = original; btn.disabled = false; lucide.createIcons(); }
         }
 
         async function selectLocalDirectory() {
-            try { directoryHandle = await window.showDirectoryPicker(); await saveToDB('last_dir_handle', directoryHandle); document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="folder-plus" class="w-4 h-4"></i> Monitorar Pasta Local'; await scanDirectory(); } catch(e){}
+            try { directoryHandle = await window.showDirectoryPicker(); await saveToDB('last_dir_handle', directoryHandle); document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local'; await scanDirectory(); } catch(e){}
         }
 
         async function verifyPermission(handle) {
@@ -616,7 +1013,7 @@
         }
 
         async function scanDirectory() {
-            if (!directoryHandle) return; const isGranted = await verifyPermission(directoryHandle); if (!isGranted) { showToast("Permissão negada para ler a pasta.", "error"); return; }
+            if (!directoryHandle) return; const isGranted = await verifyPermission(directoryHandle); if (!isGranted) { showToast("Permissão negada.", "error"); return; }
             const container = document.getElementById('dirFileList'); container.innerHTML = ''; container.classList.remove('hidden'); document.getElementById('refreshDirBtn').classList.remove('hidden');
             try {
                 for await (const entry of directoryHandle.values()) {
@@ -626,7 +1023,7 @@
                     }
                 }
                 highlightActiveFile(); lucide.createIcons();
-            } catch (err) { showToast("Erro ao listar arquivos da pasta.", "error"); }
+            } catch (err) { showToast("Erro ao ler pasta.", "error"); }
         }
 
         async function processFile(file) {
@@ -663,7 +1060,7 @@
             document.getElementById('fileName').textContent = currentFileName;
             const lastUpdateTag = document.getElementById('lastUpdateTag'), lastUpdateText = document.getElementById('lastUpdateText');
             if (has) {
-                const now = new Date(), timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), dateStr = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                const now = new Date(), timeStr = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }), dateStr = now.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
                 lastUpdateText.textContent = `${dateStr} às ${timeStr}`; lastUpdateTag.classList.remove('hidden'); lastUpdateTag.classList.add('flex');
                 highlightActiveFile(); renderDetectedCols();
                 const titleEl = document.getElementById('balanceTableTitle'), headerEl = document.getElementById('idColumnHeader'), fName = currentFileName.toUpperCase();
@@ -793,7 +1190,7 @@
                 else if(dir === 'Entrada' && isRowProtheus) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
                 else if(dir === 'Saída' && isRowWMS) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
             });
-            if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado no período.</td></tr>'; return; }
+            if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado.</td></tr>'; return; }
             const entries = Array.from(map.entries());
             const filteredEntries = entries.filter(([id, v]) => {
                 if (analysisEvidences[id]) return false;
@@ -806,14 +1203,13 @@
                 return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat;
             }).map(([id, v]) => {
                 let statusParts = [], statusClass = 'text-red-500 font-bold', diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1, diffClass = 'text-red-600 font-bold';
-                if (v.s_err > 0) statusParts.push("Erro na saída"); if (v.e_err > 0) statusParts.push("Erro na entrada");
-                if (v.s_pend > 0) { statusParts.push("Pendente de saída"); statusClass = 'text-orange-600 font-bold'; diffClass = 'text-orange-800 font-bold'; }
-                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) { statusParts.push("Pendente de entrada"); statusClass = 'text-orange-600 font-bold'; diffClass = 'text-orange-800 font-bold'; }
-                if (v.s_err > 0 || v.e_err > 0) { statusClass = 'text-red-500 font-bold'; diffClass = 'text-red-600 font-bold'; }
+                if (v.s_err > 0) statusParts.push("Erro saída"); if (v.e_err > 0) statusParts.push("Erro entrada");
+                if (v.s_pend > 0) { statusParts.push("Pendente saída"); statusClass = 'text-orange-600 font-bold'; }
+                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) { statusParts.push("Pendente entrada"); statusClass = 'text-orange-600 font-bold'; }
                 return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass };
             });
             const displayEntries = filteredEntries.slice(0, limit);
-            if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum registro crítico pendente ou com erro.</td></tr>'; return; }
+            if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nada crítico no período.</td></tr>'; return; }
             displayEntries.forEach(item => {
                 tbody.innerHTML += `
                     <tr>
@@ -823,13 +1219,12 @@
                         <td class="px-4 py-2 border-b text-center bg-slate-50 ${item.diffClass}">${item.diffVal}</td>
                         <td class="px-4 py-2 border-b text-center text-[10px] ${item.statusClass}">${item.statusMsg}</td>
                         <td class="px-4 py-2 border-b text-center">
-                            <button onclick="openEvidenceModal('${item.id}')" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition" title="Evidenciar Análise">
+                            <button onclick="openEvidenceModal('${item.id}')" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
                         </td>
                     </tr>`;
             });
-            if (filteredEntries.length > limit) tbody.innerHTML += `<tr><td colspan="6" class="p-2 text-center text-[10px] text-slate-400 italic bg-slate-50/50">Exibindo ${limit} de ${filteredEntries.length} exceções filtradas.</td></tr>`;
             lucide.createIcons();
         }
 
@@ -846,7 +1241,7 @@
             const csvContent = "\uFEFF" + csv.join('\n'), blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), link = document.createElement("a"), url = URL.createObjectURL(blob), timestamp = new Date().toISOString().slice(0,10).replace(/-/g, ''), fName = currentFileName.toUpperCase();
             let prefix = fName.includes('ASN') ? 'Excecoes_ASN' : (fName.includes('OEXP') ? 'Excecoes_OEXP' : 'Excecoes_Geral');
             link.setAttribute("href", url); link.setAttribute("download", `${prefix}_${timestamp}.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            showToast("Exportação de exceções concluída!", "success");
+            showToast("Exportação concluída!", "success");
         }
 
         function setupNotesAutoSave() { const f = document.getElementById('notesField'); f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value); }
@@ -856,7 +1251,7 @@
             rawData = []; headers = []; currentFileName = ''; analysisEvidences = {};
             localStorage.removeItem('persist_dateStart'); localStorage.removeItem('persist_dateEnd'); localStorage.removeItem('persist_lineView');
             await removeFromDB('last_raw_data'); await removeFromDB('last_headers'); await removeFromDB('last_filename'); await removeFromDB('last_mapping'); await removeFromDB('analysis_evidences');
-            document.getElementById('dateStart').value = ''; document.getElementById('dateEnd').value = ''; document.getElementById('lineViewSelector').value = 'all'; document.getElementById('filter-id').value = ''; document.getElementById('filter-entradas').value = ''; document.getElementById('filter-saidas').value = ''; document.getElementById('filter-dif').value = ''; document.getElementById('filter-status').value = '';
+            document.getElementById('dateStart').value = ''; document.getElementById('dateEnd').value = ''; document.getElementById('lineViewSelector').value = 'all'; document.getElementById('filter-id').value = '';
             updateAppState(false); if(lineChart) lineChart.destroy(); if(barChart) barChart.destroy(); if(doughnutChart) doughnutChart.destroy();
         }
 
