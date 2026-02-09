@@ -52,8 +52,7 @@
             color: #334155;
             margin-bottom: 15px;
             display: flex;
-            align-items: center;
-            gap: 8px;
+            align-items: center; gap: 8px;
             border-bottom: 1px solid #f1f5f9;
             padding-bottom: 10px;
             margin-left: 0; 
@@ -63,37 +62,14 @@
             background-color: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(4px);
         }
-        .report-item-card {
-            transition: all 0.2s ease;
-        }
-        .report-item-card.active {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-        }
+        .report-item-card { transition: all 0.2s ease; }
+        .report-item-card.active { border-color: #3b82f6; background-color: #eff6ff; }
+        .file-item-active { background-color: #eff6ff !important; border-color: #3b82f6 !important; color: #1d4ed8 !important; font-weight: 700 !important; }
 
-        .file-item-active {
-            background-color: #eff6ff !important;
-            border-color: #3b82f6 !important;
-            color: #1d4ed8 !important;
-            font-weight: 700 !important;
-        }
-
-        /* Estilo para os inputs de filtro na tabela */
         .table-filter-input {
-            width: 100%;
-            font-size: 10px;
-            padding: 2px 6px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            font-weight: normal;
-            color: #475569;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; font-size: 10px; padding: 2px 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-weight: normal; color: #475569; outline: none; transition: border-color 0.2s;
         }
-        .table-filter-input:focus {
-            border-color: #3b82f6;
-            background-color: #fff;
-        }
+        .table-filter-input:focus { border-color: #3b82f6; background-color: #fff; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
@@ -117,8 +93,7 @@
             
             <div class="flex items-center gap-3">
                 <button id="pdfBtn" onclick="openReportModal()" class="hidden px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-md flex items-center gap-2">
-                    <i data-lucide="printer" class="w-4 h-4"></i>
-                    Gerar Relatório PDF
+                    <i data-lucide="printer" class="w-4 h-4"></i> Gerar Relatório PDF
                 </button>
 
                 <div id="fileInfo" class="hidden text-sm px-4 py-2 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-100 shadow-sm">
@@ -135,13 +110,11 @@
             <div class="xl:col-span-3 space-y-6">
                 <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
-                        <i data-lucide="folder-search" class="w-4 h-4 text-orange-500"></i>
-                        Pasta Local (API)
+                        <i data-lucide="folder-search" class="w-4 h-4 text-orange-500"></i> Pasta Local (API)
                     </h2>
                     <div id="dirControls">
                         <button id="mainFolderBtn" onclick="selectLocalDirectory()" class="w-full py-3 px-4 bg-orange-50 text-orange-700 border border-orange-200 rounded-lg text-xs font-bold hover:bg-orange-100 transition flex items-center justify-center gap-2">
-                            <i data-lucide="folder-plus" class="w-4 h-4"></i>
-                            Monitorar Pasta Local
+                            <i data-lucide="folder-plus" class="w-4 h-4"></i> Monitorar Pasta Local
                         </button>
                     </div>
                     <div id="dirFileList" class="hidden mt-4 space-y-2 max-h-48 overflow-y-auto custom-scrollbar p-1"></div>
@@ -152,13 +125,10 @@
 
                 <section id="statusSection" class="hidden bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <h2 class="text-sm font-semibold mb-3 flex items-center gap-2 text-slate-700">
-                        <i data-lucide="check-circle-2" class="text-emerald-500"></i>
-                        Análise Concluída
+                        <i data-lucide="check-circle-2" class="text-emerald-500"></i> Análise Concluída
                     </h2>
                     <div id="detectedCols" class="space-y-1 mb-4 flex flex-wrap gap-1"></div>
-                    <button onclick="runDashboardAnalysis()" class="mt-2 w-full py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition">
-                        Recalcular
-                    </button>
+                    <button onclick="runDashboardAnalysis()" class="mt-2 w-full py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition">Recalcular</button>
                 </section>
             </div>
 
@@ -172,11 +142,9 @@
                     <section id="section-timeline" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                             <h2 class="text-base font-semibold flex items-center gap-2">
-                                <i data-lucide="line-chart" class="w-4 h-4 text-blue-500"></i>
-                                Volume Horário por Data e Status
+                                <i data-lucide="line-chart" class="w-4 h-4 text-blue-500"></i> Volume Horário por Data e Status
                             </h2>
                             <div class="flex items-center gap-2 text-sm">
-                                <!-- Novo Filtro de Visão WMS/Protheus -->
                                 <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-md border border-slate-200 mr-2">
                                     <i data-lucide="filter" class="w-3 h-3 text-slate-400 ml-1"></i>
                                     <select id="lineViewSelector" class="bg-transparent border-0 focus:ring-0 text-[10px] font-bold text-slate-600 cursor-pointer p-1" onchange="refreshDashboard()">
@@ -198,16 +166,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <section id="section-bar" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                             <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
-                                <i data-lucide="arrow-left-right" class="w-4 h-4 text-indigo-500"></i>
-                                Comparativo de Entrada e Saída
+                                <i data-lucide="arrow-left-right" class="w-4 h-4 text-indigo-500"></i> Comparativo de Entrada e Saída
                             </h2>
                             <div class="h-[300px] relative"><canvas id="barChartCanvas"></canvas></div>
                         </section>
 
                         <section id="section-doughnut" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                             <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
-                                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-500"></i>
-                                Distribuição de Status
+                                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-500"></i> Distribuição de Status
                             </h2>
                             <div class="h-[300px] relative flex items-center justify-center">
                                 <canvas id="doughnutChartCanvas"></canvas>
@@ -220,8 +186,7 @@
                             <div class="flex items-center justify-between mb-4 shrink-0">
                                 <div class="flex items-center gap-4">
                                     <h2 id="balanceTableTitle" class="text-base font-semibold flex items-center gap-2">
-                                        <i data-lucide="arrow-right-left" class="w-4 h-4 text-orange-500"></i>
-                                        Entradas e Saídas - ASN
+                                        <i data-lucide="arrow-right-left" class="w-4 h-4 text-orange-500"></i> Entradas e Saídas - ASN
                                     </h2>
                                     <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg">
                                         <label for="tableLimit" class="text-[10px] font-bold text-slate-400 uppercase">Mostrar:</label>
@@ -234,8 +199,7 @@
                                     </div>
                                 </div>
                                 <button onclick="exportTableToCSV()" class="text-[10px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2 transition shadow-sm active:scale-95">
-                                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                    Exportar CSV
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
                                 </button>
                             </div>
                             <div class="overflow-auto custom-scrollbar grow border rounded-lg">
@@ -247,6 +211,7 @@
                                             <th class="px-4 py-2 font-semibold border-b text-center text-blue-600">Saídas (OK)</th>
                                             <th class="px-4 py-2 font-semibold border-b text-center bg-slate-100">Diferença (OK)</th>
                                             <th class="px-4 py-2 font-semibold border-b text-center text-red-500">Status de Erro</th>
+                                            <th class="px-4 py-2 font-semibold border-b text-center text-slate-400">Ação</th>
                                         </tr>
                                         <tr class="bg-white">
                                             <th class="px-2 py-1 border-b"><input type="text" id="filter-id" class="table-filter-input" placeholder="Buscar ID..." oninput="renderBalanceTable()"></th>
@@ -254,6 +219,7 @@
                                             <th class="px-2 py-1 border-b"><input type="text" id="filter-saidas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
                                             <th class="px-2 py-1 border-b"><input type="text" id="filter-dif" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
                                             <th class="px-2 py-1 border-b"><input type="text" id="filter-status" class="table-filter-input text-center" placeholder="Filtrar status..." oninput="renderBalanceTable()"></th>
+                                            <th class="px-2 py-1 border-b"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="balanceTableBody" class="divide-y divide-slate-100"></tbody>
@@ -263,13 +229,38 @@
 
                         <section id="section-notes" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[400px] border-l-4 border-l-yellow-400">
                             <h2 class="text-base font-semibold mb-2 flex items-center gap-2 text-slate-800">
-                                <i data-lucide="clipboard-edit" class="w-4 h-4 text-yellow-500"></i>
-                                Notas
+                                <i data-lucide="clipboard-edit" class="w-4 h-4 text-yellow-500"></i> Notas
                             </h2>
                             <textarea id="notesField" class="grow w-full p-3 text-sm border border-slate-200 rounded-lg bg-yellow-50/30 focus:ring-2 focus:ring-yellow-400 resize-none custom-scrollbar" placeholder="Observações..."></textarea>
                         </section>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Evidência de Análise -->
+    <div id="evidenceModal" class="hidden fixed inset-0 z-[110] modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="shield-check" class="text-indigo-500"></i> Evidenciar Análise
+                </h3>
+                <button onclick="closeEvidenceModal()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-6">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ID Selecionado</label>
+                <div id="evidenceTargetId" class="text-sm font-mono bg-slate-100 p-2 rounded border border-slate-200 mb-4 text-slate-700"></div>
+                
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota de Evidência / Análise</label>
+                <textarea id="evidenceNote" class="w-full h-32 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none outline-none bg-slate-50 transition-all" placeholder="Digite aqui o resultado da sua análise para este ID..."></textarea>
+                <p class="text-[10px] text-slate-400 mt-2 italic">* Ao salvar, este comentário será movido para a seção de Notas e o item sairá desta tabela.</p>
+            </div>
+            <div class="p-6 bg-slate-50 flex items-center justify-end gap-3">
+                <button onclick="closeEvidenceModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+                <button onclick="saveEvidence()" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Salvar e Limpar
+                </button>
             </div>
         </div>
     </div>
@@ -321,6 +312,8 @@
         let headers = [];
         let currentFileName = '';
         let directoryHandle = null; 
+        let analysisEvidences = {}; // Armazena as notas por ID
+        let currentEvidenceId = null;
         
         let lineChart = null;
         let barChart = null;
@@ -345,13 +338,12 @@
             'SaídaErro': '#b91c1c'    
         };
 
-        // --- Persistência com IndexedDB ---
         const DB_NAME = 'DashboardAnalyticsDB';
         const STORE_NAME = 'AppPersistence';
 
         async function getDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
+                const request = indexedDB.open(DB_NAME, 2); 
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -387,9 +379,7 @@
         function getSafeDate(val) {
             if (!val) return null;
             if (val instanceof Date) return val;
-            if (typeof val === 'number' && val > 0) {
-                return new Date(Math.round((val - 25569) * 86400 * 1000));
-            }
+            if (typeof val === 'number' && val > 0) return new Date(Math.round((val - 25569) * 86400 * 1000));
             const str = String(val).trim();
             if (!str || str === '0' || str.toLowerCase() === 'null') return null;
             let dateObj = null;
@@ -408,17 +398,13 @@
 
         function formatDateToISO(date) {
             if (!(date instanceof Date) || isNaN(date.getTime())) return "";
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
+            const year = date.getFullYear(), month = String(date.getMonth() + 1).padStart(2, '0'), day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
 
         function getContrastColor(hexColor) {
             if (!hexColor || hexColor[0] !== '#') return '#1e293b';
-            const r = parseInt(hexColor.slice(1, 3), 16);
-            const g = parseInt(hexColor.slice(3, 5), 16);
-            const b = parseInt(hexColor.slice(5, 7), 16);
+            const r = parseInt(hexColor.slice(1, 3), 16), g = parseInt(hexColor.slice(3, 5), 16), b = parseInt(hexColor.slice(5, 7), 16);
             const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
             return (yiq >= 128) ? '#1e293b' : '#ffffff';
         }
@@ -438,7 +424,6 @@
             lucide.createIcons();
             setupNotesAutoSave();
 
-            // Tentar restaurar handle da pasta
             directoryHandle = await getFromDB('last_dir_handle');
             if (directoryHandle) {
                 document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
@@ -446,47 +431,73 @@
                 lucide.createIcons();
             }
 
-            // Tentar restaurar dados da última visualização
+            analysisEvidences = await getFromDB('analysis_evidences') || {};
+
             const savedData = await getFromDB('last_raw_data');
             if (savedData) {
                 rawData = savedData;
                 headers = await getFromDB('last_headers') || [];
                 currentFileName = await getFromDB('last_filename') || '';
                 columnMapping = await getFromDB('last_mapping') || columnMapping;
-                
                 updateAppState(true);
                 runDashboardAnalysis();
                 loadSavedNotes();
             }
         });
 
-        function openReportModal() {
-            renderReportConfig();
-            document.getElementById('reportModal').classList.remove('hidden');
+        // --- Modais ---
+        function openReportModal() { renderReportConfig(); document.getElementById('reportModal').classList.remove('hidden'); lucide.createIcons(); }
+        function closeReportModal() { document.getElementById('reportModal').classList.add('hidden'); }
+        
+        function openEvidenceModal(id) {
+            currentEvidenceId = id;
+            document.getElementById('evidenceTargetId').textContent = id;
+            document.getElementById('evidenceNote').value = '';
+            document.getElementById('evidenceModal').classList.remove('hidden');
             lucide.createIcons();
         }
+        function closeEvidenceModal() { document.getElementById('evidenceModal').classList.add('hidden'); }
 
-        function closeReportModal() {
-            document.getElementById('reportModal').classList.add('hidden');
+        async function saveEvidence() {
+            const note = document.getElementById('evidenceNote').value.trim();
+            if(!note) { showToast("Por favor, digite uma nota de análise.", "error"); return; }
+            
+            const timestamp = new Date().toISOString();
+            const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+            analysisEvidences[currentEvidenceId] = {
+                note: note,
+                timestamp: timestamp
+            };
+            
+            await saveToDB('analysis_evidences', analysisEvidences);
+
+            // --- NOVO: Transferir para a seção de Notas ---
+            const notesEl = document.getElementById('notesField');
+            const fName = currentFileName.toUpperCase();
+            const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
+            
+            const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} - ${note}`;
+            notesEl.value += newNoteEntry;
+            
+            // Forçar o salvamento das Notas no localStorage
+            if (currentFileName) {
+                localStorage.setItem('notes_' + currentFileName, notesEl.value);
+            }
+            // ----------------------------------------------
+            
+            showToast("Evidência salva e adicionada às Notas!", "success");
+            closeEvidenceModal();
+            renderBalanceTable(); 
         }
 
-        function toggleElement(id) {
-            const item = reportConfig.find(c => c.id === id);
-            item.active = !item.active;
-            renderReportConfig();
-        }
-
-        function updateLayoutConfig(id, field, value) {
-            const item = reportConfig.find(c => c.id === id);
-            item[field] = value;
-            renderReportConfig();
-        }
+        function toggleElement(id) { const item = reportConfig.find(c => c.id === id); item.active = !item.active; renderReportConfig(); }
+        function updateLayoutConfig(id, field, value) { const item = reportConfig.find(c => c.id === id); item[field] = value; renderReportConfig(); }
 
         function renderReportConfig() {
-            const listEl = document.getElementById('reportElementsList');
-            const previewEl = document.getElementById('layoutPreview');
-            listEl.innerHTML = '';
-            previewEl.innerHTML = '';
+            const listEl = document.getElementById('reportElementsList'), previewEl = document.getElementById('layoutPreview');
+            listEl.innerHTML = ''; previewEl.innerHTML = '';
             reportConfig.forEach(item => {
                 const card = document.createElement('div');
                 card.className = `report-item-card p-4 rounded-xl border-2 transition ${item.active ? 'border-indigo-600 bg-indigo-50/30' : 'border-slate-100 bg-white opacity-60'}`;
@@ -515,9 +526,7 @@
                                 <option value="half" ${item.width === 'half' ? 'selected' : ''}>Metade (50%)</option>
                             </select>
                         </div>
-                    </div>
-                    ` : ''}
-                `;
+                    </div>` : ''}`;
                 listEl.appendChild(card);
             });
             const pages = [...new Set(reportConfig.filter(i => i.active).map(i => i.page))].sort();
@@ -525,17 +534,14 @@
                 const pageBox = document.createElement('div');
                 pageBox.className = "p-3 bg-white border border-slate-200 rounded-lg shadow-sm";
                 pageBox.innerHTML = `<div class="text-[10px] font-black text-slate-300 mb-2 uppercase tracking-tighter">PÁGINA ${pNum}</div>`;
-                const grid = document.createElement('div');
-                grid.className = "grid grid-cols-2 gap-2";
+                const grid = document.createElement('div'); grid.className = "grid grid-cols-2 gap-2";
                 const itemsInPage = reportConfig.filter(i => i.active && i.page === pNum);
                 itemsInPage.forEach(item => {
                     const itemBox = document.createElement('div');
                     itemBox.className = `p-2 bg-indigo-100 border border-indigo-200 rounded text-[9px] font-bold text-indigo-700 text-center truncate ${item.width === 'full' ? 'col-span-2' : 'col-span-1'}`;
-                    itemBox.textContent = item.title;
-                    grid.appendChild(itemBox);
+                    itemBox.textContent = item.title; grid.appendChild(itemBox);
                 });
-                pageBox.appendChild(grid);
-                previewEl.appendChild(pageBox);
+                pageBox.appendChild(grid); previewEl.appendChild(pageBox);
             });
             if (pages.length === 0) previewEl.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-10">Nenhum elemento selecionado.</p>';
             lucide.createIcons();
@@ -544,32 +550,17 @@
         async function generateCustomPDF() {
             if (rawData.length === 0) return;
             const btn = document.getElementById('confirmGenerateBtn');
-            const original = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide=\"loader-2\" class=\"w-5 h-5 animate-spin\"></i> Gerando...';
-            btn.disabled = true;
-
+            const original = btn.innerHTML; btn.innerHTML = '<i data-lucide=\"loader-2\" class=\"w-5 h-5 animate-spin\"></i> Gerando...'; btn.disabled = true;
             const exportArea = document.getElementById('pdfExportContainer');
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a4' });
-
-            const activeItems = reportConfig.filter(i => i.active);
-            const pages = [...new Set(activeItems.map(i => i.page))].sort();
-
+            const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a4' });
+            const activeItems = reportConfig.filter(i => i.active), pages = [...new Set(activeItems.map(i => i.page))].sort();
             try {
-                const dateStart = document.getElementById('dateStart').value;
-                const dateEnd = document.getElementById('dateEnd').value;
-                const emissionDate = new Date().toLocaleString('pt-BR');
+                const dateStart = document.getElementById('dateStart').value, dateEnd = document.getElementById('dateEnd').value, emissionDate = new Date().toLocaleString('pt-BR');
                 let pdfTitle = "Relatório Analítico de Integrações";
                 const upperName = currentFileName.toUpperCase();
-                if (upperName.includes('ASN')) {
-                    pdfTitle += " - ASN";
-                } else if (upperName.includes('OEXP') || upperName.includes('ORDEM DE EXPEDICAO') || upperName.includes('ORDEM DE EXPEDIÇÃO')) {
-                    pdfTitle += " - Ordem de Expedição";
-                }
-
+                if (upperName.includes('ASN')) pdfTitle += " - ASN"; else if (upperName.includes('OEXP')) pdfTitle += " - Ordem de Expedição";
                 for (let i = 0; i < pages.length; i++) {
-                    const pNum = pages[i];
-                    if (i > 0) doc.addPage();
+                    const pNum = pages[i]; if (i > 0) doc.addPage();
                     exportArea.innerHTML = `
                         <div style="padding: 0; background: #f8fafc; width: 1120px; min-height: 792px;">
                             <div style="background: #1e293b; padding: 25px 40px; border-bottom: 4px solid #3b82f6;">
@@ -583,138 +574,71 @@
                                 </div>
                             </div>
                             <div id="pdf-grid-container" style="padding: 30px 40px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; justify-content: flex-start; text-align: left;"></div>
-                            <div style="position: absolute; bottom: 20px; width: 100%; text-align: center; color: #94a3b8; font-size: 10px;">
-                                Documento gerado em ${emissionDate} — Confidencial
-                            </div>
-                        </div>
-                    `;
-                    const gridContainer = exportArea.querySelector('#pdf-grid-container');
-                    const itemsInPage = activeItems.filter(item => item.page === pNum);
+                            <div style="position: absolute; bottom: 20px; width: 100%; text-align: center; color: #94a3b8; font-size: 10px;">Documento gerado em ${emissionDate} — Confidencial</div>
+                        </div>`;
+                    const gridContainer = exportArea.querySelector('#pdf-grid-container'), itemsInPage = activeItems.filter(item => item.page === pNum);
                     for (const item of itemsInPage) {
-                        const originalSection = document.getElementById(item.id);
-                        const canvas = originalSection.querySelector('canvas');
-                        const itemWrapper = document.createElement('div');
+                        const originalSection = document.getElementById(item.id), canvas = originalSection.querySelector('canvas'), itemWrapper = document.createElement('div');
                         itemWrapper.style.width = item.width === 'full' ? '100%' : 'calc(50% - 10px)';
-                        const card = document.createElement('div');
-                        card.className = "pdf-card";
-                        card.style.textAlign = 'left';
+                        const card = document.createElement('div'); card.className = "pdf-card"; card.style.textAlign = 'left';
                         card.innerHTML = `<div class="pdf-section-title" style="margin-left: 0; padding-left: 12px; border-left: 5px solid #3b82f6;">${item.title}</div>`;
                         const contentDiv = document.createElement('div');
                         if (canvas) {
                             contentDiv.style.height = item.width === 'full' ? '380px' : '300px';
-                            const newCanvas = document.createElement('canvas');
-                            newCanvas.width = canvas.width;
-                            newCanvas.height = canvas.height;
-                            newCanvas.style.width = '100%';
-                            newCanvas.style.height = '100%';
-                            newCanvas.getContext('2d').drawImage(canvas, 0, 0);
+                            const newCanvas = document.createElement('canvas'); newCanvas.width = canvas.width; newCanvas.height = canvas.height;
+                            newCanvas.style.width = '100%'; newCanvas.style.height = '100%'; newCanvas.getContext('2d').drawImage(canvas, 0, 0);
                             contentDiv.appendChild(newCanvas);
                         } else if (item.id === 'section-notes') {
-                            contentDiv.style.padding = "10px 0";
-                            contentDiv.style.fontSize = "16px";
-                            contentDiv.style.color = "#451a03";
-                            contentDiv.style.whiteSpace = "pre-wrap";
-                            contentDiv.style.lineHeight = "1.6";
+                            contentDiv.style.padding = "10px 0"; contentDiv.style.fontSize = "16px"; contentDiv.style.color = "#451a03"; contentDiv.style.whiteSpace = "pre-wrap"; contentDiv.style.lineHeight = "1.6";
                             contentDiv.textContent = document.getElementById('notesField').value || 'Nenhuma observação registrada.';
                         } else if (item.id === 'section-table') {
                             const tableClone = originalSection.querySelector('table').cloneNode(true);
-                            const filterRow = tableClone.querySelector('thead tr:nth-child(2)');
-                            if(filterRow) filterRow.remove();
-                            tableClone.style.width = '100%';
-                            tableClone.style.fontSize = '12px';
-                            contentDiv.appendChild(tableClone);
+                            const filterRow = tableClone.querySelector('thead tr:nth-child(2)'); if(filterRow) filterRow.remove();
+                            tableClone.style.width = '100%'; tableClone.style.fontSize = '12px'; contentDiv.appendChild(tableClone);
                         }
-                        card.appendChild(contentDiv);
-                        itemWrapper.appendChild(card);
-                        gridContainer.appendChild(itemWrapper);
+                        card.appendChild(contentDiv); itemWrapper.appendChild(card); gridContainer.appendChild(itemWrapper);
                     }
                     const canvasPage = await html2canvas(exportArea, { scale: 3, useCORS: true, logging: false });
                     doc.addImage(canvasPage.toDataURL('image/png'), 'PNG', 0, 0, 297, 210);
                 }
                 const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
                 doc.save(`Relatorio_Integracoes_${timestamp}.pdf`);
-                showToast("Relatório PDF de Integrações gerado com sucesso!", "success");
-                closeReportModal();
-            } catch (err) {
-                console.error(err);
-                showToast("Erro na geração do PDF.", "error");
-            } finally {
-                exportArea.innerHTML = '';
-                btn.innerHTML = original;
-                btn.disabled = false;
-                lucide.createIcons();
-            }
+                showToast("Relatório PDF de Integrações gerado com sucesso!", "success"); closeReportModal();
+            } catch (err) { console.error(err); showToast("Erro na geração do PDF.", "error"); } finally { exportArea.innerHTML = ''; btn.innerHTML = original; btn.disabled = false; lucide.createIcons(); }
         }
 
         async function selectLocalDirectory() {
-            try { 
-                directoryHandle = await window.showDirectoryPicker(); 
-                await saveToDB('last_dir_handle', directoryHandle);
-                document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="folder-plus" class="w-4 h-4"></i> Monitorar Pasta Local';
-                await scanDirectory(); 
-            } catch(e){}
+            try { directoryHandle = await window.showDirectoryPicker(); await saveToDB('last_dir_handle', directoryHandle); document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="folder-plus" class="w-4 h-4"></i> Monitorar Pasta Local'; await scanDirectory(); } catch(e){}
         }
 
         async function verifyPermission(handle) {
-            const options = { mode: 'read' };
-            if ((await handle.queryPermission(options)) === 'granted') return true;
-            if ((await handle.requestPermission(options)) === 'granted') return true;
-            return false;
+            const options = { mode: 'read' }; if ((await handle.queryPermission(options)) === 'granted') return true; if ((await handle.requestPermission(options)) === 'granted') return true; return false;
         }
 
         async function scanDirectory() {
-            if (!directoryHandle) return;
-            const isGranted = await verifyPermission(directoryHandle);
-            if (!isGranted) {
-                showToast("Permissão negada para ler a pasta.", "error");
-                return;
-            }
-            const container = document.getElementById('dirFileList');
-            container.innerHTML = ''; container.classList.remove('hidden');
-            document.getElementById('refreshDirBtn').classList.remove('hidden');
+            if (!directoryHandle) return; const isGranted = await verifyPermission(directoryHandle); if (!isGranted) { showToast("Permissão negada para ler a pasta.", "error"); return; }
+            const container = document.getElementById('dirFileList'); container.innerHTML = ''; container.classList.remove('hidden'); document.getElementById('refreshDirBtn').classList.remove('hidden');
             try {
                 for await (const entry of directoryHandle.values()) {
                     if (entry.kind === 'file' && ['.xlsx', '.xls', '.csv'].some(ex => entry.name.toLowerCase().endsWith(ex))) {
-                        const b = document.createElement('button');
-                        b.setAttribute('data-filename', entry.name);
-                        b.className = "w-full text-left p-2 hover:bg-slate-50 border border-slate-100 rounded text-[10px] truncate flex items-center gap-2 transition-colors";
-                        b.innerHTML = `<i data-lucide=\"file-text\" class=\"w-3 h-3 text-slate-400\"></i>${entry.name}`;
-                        b.onclick = async () => processFile(await entry.getFile());
-                        container.appendChild(b);
+                        const b = document.createElement('button'); b.setAttribute('data-filename', entry.name); b.className = "w-full text-left p-2 hover:bg-slate-50 border border-slate-100 rounded text-[10px] truncate flex items-center gap-2 transition-colors";
+                        b.innerHTML = `<i data-lucide=\"file-text\" class=\"w-3 h-3 text-slate-400\"></i>${entry.name}`; b.onclick = async () => processFile(await entry.getFile()); container.appendChild(b);
                     }
                 }
-                highlightActiveFile();
-                lucide.createIcons();
-            } catch (err) {
-                showToast("Erro ao listar arquivos da pasta.", "error");
-            }
+                highlightActiveFile(); lucide.createIcons();
+            } catch (err) { showToast("Erro ao listar arquivos da pasta.", "error"); }
         }
 
         async function processFile(file) {
-            if (!file) return;
-            const reader = new FileReader();
+            if (!file) return; const reader = new FileReader();
             reader.onload = async e => {
-                const dataRaw = new Uint8Array(e.target.result);
-                const wb = XLSX.read(dataRaw, { type: 'array', cellDates: true });
+                const dataRaw = new Uint8Array(e.target.result), wb = XLSX.read(dataRaw, { type: 'array', cellDates: true });
                 let initialData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
                 if (initialData.length > 0) {
-                    const seen = new Set();
-                    rawData = initialData.filter(row => {
-                        const key = JSON.stringify(row);
-                        return seen.has(key) ? false : seen.add(key);
-                    });
-                    headers = Object.keys(rawData[0]); 
-                    currentFileName = file.name;
-                    guessMappings(); 
-                    
-                    await saveToDB('last_raw_data', rawData);
-                    await saveToDB('last_headers', headers);
-                    await saveToDB('last_filename', currentFileName);
-                    await saveToDB('last_mapping', columnMapping);
-
-                    updateAppState(true); 
-                    runDashboardAnalysis(); 
-                    loadSavedNotes();
+                    const seen = new Set(); rawData = initialData.filter(row => { const key = JSON.stringify(row); return seen.has(key) ? false : seen.add(key); });
+                    headers = Object.keys(rawData[0]); currentFileName = file.name; guessMappings();
+                    await saveToDB('last_raw_data', rawData); await saveToDB('last_headers', headers); await saveToDB('last_filename', currentFileName); await saveToDB('last_mapping', columnMapping);
+                    updateAppState(true); runDashboardAnalysis(); loadSavedNotes();
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -722,25 +646,14 @@
 
         function guessMappings() {
             for (const k in columnMapping) {
-                columnMapping[k] = '';
-                const poss = possibleNames[k];
-                for (const h of headers) {
-                    const c = h.toLowerCase().trim().replace(/[_\s\.]/g, '');
-                    if (poss.includes(c)) { columnMapping[k] = h; break; }
-                }
+                columnMapping[k] = ''; const poss = possibleNames[k];
+                for (const h of headers) { const c = h.toLowerCase().trim().replace(/[_\s\.]/g, ''); if (poss.includes(c)) { columnMapping[k] = h; break; } }
             }
         }
 
         function highlightActiveFile() {
-            const list = document.getElementById('dirFileList');
-            const buttons = list.querySelectorAll('button');
-            buttons.forEach(btn => {
-                if (btn.getAttribute('data-filename') === currentFileName) {
-                    btn.classList.add('file-item-active');
-                } else {
-                    btn.classList.remove('file-item-active');
-                }
-            });
+            const list = document.getElementById('dirFileList'); const buttons = list.querySelectorAll('button');
+            buttons.forEach(btn => { if (btn.getAttribute('data-filename') === currentFileName) btn.classList.add('file-item-active'); else btn.classList.remove('file-item-active'); });
         }
 
         function updateAppState(has) {
@@ -748,213 +661,92 @@
             ids.forEach(id => document.getElementById(id).classList.toggle('hidden', !has));
             document.getElementById('emptyState').classList.toggle('hidden', has);
             document.getElementById('fileName').textContent = currentFileName;
-
-            // Atualizar tag de Última Atualização Refinada
-            const lastUpdateTag = document.getElementById('lastUpdateTag');
-            const lastUpdateText = document.getElementById('lastUpdateText');
+            const lastUpdateTag = document.getElementById('lastUpdateTag'), lastUpdateText = document.getElementById('lastUpdateText');
             if (has) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                const dateStr = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                lastUpdateText.textContent = `${dateStr} às ${timeStr}`;
-                lastUpdateTag.classList.remove('hidden');
-                lastUpdateTag.classList.add('flex');
-
-                highlightActiveFile();
-                renderDetectedCols();
-                const titleEl = document.getElementById('balanceTableTitle');
-                const headerEl = document.getElementById('idColumnHeader');
-                const fName = currentFileName.toUpperCase();
-                if (fName.includes('ASN')) {
-                    if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - ASN';
-                    if(headerEl) headerEl.textContent = 'ASN (ID)';
-                } else if (fName.includes('OEXP') || fName.includes('ORDEM DE EXPEDICAO') || fName.includes('ORDEM DE EXPEDIÇÃO')) {
-                    if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - Ordem de expedição';
-                    if(headerEl) headerEl.textContent = 'OEXP (ID)';
-                }
-            } else {
-                lastUpdateTag.classList.add('hidden');
-                lastUpdateTag.classList.remove('flex');
-            }
+                const now = new Date(), timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), dateStr = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                lastUpdateText.textContent = `${dateStr} às ${timeStr}`; lastUpdateTag.classList.remove('hidden'); lastUpdateTag.classList.add('flex');
+                highlightActiveFile(); renderDetectedCols();
+                const titleEl = document.getElementById('balanceTableTitle'), headerEl = document.getElementById('idColumnHeader'), fName = currentFileName.toUpperCase();
+                if (fName.includes('ASN')) { if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - ASN'; if(headerEl) headerEl.textContent = 'ASN (ID)'; }
+                else if (fName.includes('OEXP')) { if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - Ordem de expedição'; if(headerEl) headerEl.textContent = 'OEXP (ID)'; }
+            } else { lastUpdateTag.classList.add('hidden'); lastUpdateTag.classList.remove('flex'); }
             lucide.createIcons();
         }
 
         function renderDetectedCols() {
             const c = document.getElementById('detectedCols'); c.innerHTML = '';
-            Object.entries(columnMapping).forEach(([k, v]) => {
-                if(v) c.innerHTML += `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] border border-blue-200">${k}: ${v}</span>`;
-            });
+            Object.entries(columnMapping).forEach(([k, v]) => { if(v) c.innerHTML += `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] border border-blue-200">${k}: ${v}</span>`; });
         }
 
         function refreshDashboard() {
-            const dateStart = document.getElementById('dateStart').value;
-            const dateEnd = document.getElementById('dateEnd').value;
-            const lineView = document.getElementById('lineViewSelector').value;
-            
-            if (dateStart) localStorage.setItem('persist_dateStart', dateStart);
-            if (dateEnd) localStorage.setItem('persist_dateEnd', dateEnd);
+            const dateStart = document.getElementById('dateStart').value, dateEnd = document.getElementById('dateEnd').value, lineView = document.getElementById('lineViewSelector').value;
+            if (dateStart) localStorage.setItem('persist_dateStart', dateStart); if (dateEnd) localStorage.setItem('persist_dateEnd', dateEnd);
             localStorage.setItem('persist_lineView', lineView);
-
-            updateLineChart();
-            renderBarChart();
-            renderDoughnutChart();
-            renderBalanceTable();
+            updateLineChart(); renderBarChart(); renderDoughnutChart(); renderBalanceTable();
         }
 
-        function runDashboardAnalysis() {
-            setupDateFilters(); 
-            refreshDashboard();
-        }
+        function runDashboardAnalysis() { setupDateFilters(); refreshDashboard(); }
 
-        function normalizeString(v) {
-            if (v === undefined || v === null) return '';
-            return String(v).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        }
-
+        function normalizeString(v) { if (v === undefined || v === null) return ''; return String(v).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
         function normalizeDirection(v) {
-            const s = normalizeString(v);
-            if (['e', '1'].includes(s) || s.startsWith('ent') || s.includes('in')) return 'Entrada';
-            if (['s', '2'].includes(s) || s.startsWith('sai') || s.includes('out')) return 'Saída';
-            return 'Outro';
+            const s = normalizeString(v); if (['e', '1'].includes(s) || s.startsWith('ent') || s.includes('in')) return 'Entrada'; if (['s', '2'].includes(s) || s.startsWith('sai') || s.includes('out')) return 'Saída'; return 'Outro';
         }
 
         function getStatusCategory(v) {
-            const s = normalizeString(v);
-            if (s.includes('proc') || s.includes('concl') || s.includes('ok') || s === 'sucesso' || s === 'p') return 'Processado';
-            if (s.includes('pend') || s.includes('aguard') || s === 'a') return 'Pendente';
-            if (s.includes('erro') || s.includes('falh') || s.includes('diverg') || s === 'e') return 'Erro';
-            return 'Outros';
+            const s = normalizeString(v); if (s.includes('proc') || s.includes('concl') || s.includes('ok') || s === 'sucesso' || s === 'p') return 'Processado'; if (s.includes('pend') || s.includes('aguard') || s === 'a') return 'Pendente'; if (s.includes('erro') || s.includes('falh') || s.includes('diverg') || s === 'e') return 'Erro'; return 'Outros';
         }
 
         function setupDateFilters() {
-            const dateStartInput = document.getElementById('dateStart');
-            const dateEndInput = document.getElementById('dateEnd');
-            const lineViewSelector = document.getElementById('lineViewSelector');
-            
-            const savedStart = localStorage.getItem('persist_dateStart');
-            const savedEnd = localStorage.getItem('persist_dateEnd');
-            const savedView = localStorage.getItem('persist_lineView');
-
+            const dateStartInput = document.getElementById('dateStart'), dateEndInput = document.getElementById('dateEnd'), lineViewSelector = document.getElementById('lineViewSelector');
+            const savedStart = localStorage.getItem('persist_dateStart'), savedEnd = localStorage.getItem('persist_dateEnd'), savedView = localStorage.getItem('persist_lineView');
             if (savedView) lineViewSelector.value = savedView;
-
-            if (savedStart && savedEnd) {
-                dateStartInput.value = savedStart;
-                dateEndInput.value = savedEnd;
-                return; 
-            }
-
+            if (savedStart && savedEnd) { dateStartInput.value = savedStart; dateEndInput.value = savedEnd; return; }
             const col = columnMapping['data']; if(!col) return;
             const dates = rawData.map(r => getSafeDate(r[col])).filter(d => d);
-            if(dates.length) {
-                const min = dates.reduce((a, b) => a < b ? a : b);
-                const max = dates.reduce((a, b) => a > b ? a : b);
-                dateStartInput.value = formatDateToISO(min);
-                dateEndInput.value = formatDateToISO(max);
-            }
+            if(dates.length) { const min = dates.reduce((a, b) => a < b ? a : b), max = dates.reduce((a, b) => a > b ? a : b); dateStartInput.value = formatDateToISO(min); dateEndInput.value = formatDateToISO(max); }
         }
 
         function getFilteredData() {
-            const dCol = columnMapping['data'];
-            const startStr = document.getElementById('dateStart').value;
-            const endStr = document.getElementById('dateEnd').value;
-
-            return rawData.filter(r => {
-                const dateVal = getSafeDate(r[dCol]);
-                if (!dateVal) return true; 
-
-                const dISO = formatDateToISO(dateVal);
-                if (!startStr || !endStr) return true;
-                return dISO >= startStr && dISO <= endStr;
-            });
+            const dCol = columnMapping['data'], startStr = document.getElementById('dateStart').value, endStr = document.getElementById('dateEnd').value;
+            return rawData.filter(r => { const dateVal = getSafeDate(r[dCol]); if (!dateVal) return true; const dISO = formatDateToISO(dateVal); if (!startStr || !endStr) return true; return dISO >= startStr && dISO <= endStr; });
         }
 
         function updateLineChart() {
             const dCol = columnMapping['data'], tCol = columnMapping['hora'], sCol = columnMapping['status'], dirCol = columnMapping['direcao'], sysCol = columnMapping['sistema'];
-            const dataRawFiltered = getFilteredData();
-            const viewType = document.getElementById('lineViewSelector').value;
-
+            const dataRawFiltered = getFilteredData(), viewType = document.getElementById('lineViewSelector').value;
             const data = dataRawFiltered.filter(r => {
-                if (viewType === 'all') return true;
-                const dir = normalizeDirection(r[dirCol]);
-                const sKey = sysCol || (headers.find(h => {
-                    const n = normalizeString(h);
-                    return n.includes('sistema') || n.includes('origem') || n.includes('modulo') || n.includes('aplicacao');
-                }) || '');
+                if (viewType === 'all') return true; const dir = normalizeDirection(r[dirCol]);
+                const sKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo') || n.includes('aplicacao'); }) || '');
                 const sysRaw = sKey ? String(r[sKey] || '').toUpperCase() : '';
-                const isWMSExplicit = sysRaw.includes('WMS');
-                const isProtheusExplicit = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
-                if (viewType === 'wms') return isWMSExplicit || dir === 'Entrada';
-                if (viewType === 'protheus') return isProtheusExplicit || dir === 'Saída';
-                return true;
+                const isWMSExplicit = sysRaw.includes('WMS'), isProtheusExplicit = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
+                if (viewType === 'wms') return isWMSExplicit || dir === 'Entrada'; if (viewType === 'protheus') return isProtheusExplicit || dir === 'Saída'; return true;
             });
-
-            const cats = {
-                'Processado': { color: colorsBase.Processado, data: Array(24).fill(0) },
-                'Pendente': { color: colorsBase.Pendente, data: Array(24).fill(0) },
-                'Erro': { color: colorsBase.Erro, data: Array(24).fill(0) },
-                'Outros': { color: colorsBase.Outros, data: Array(24).fill(0) }
-            };
-
+            const cats = { 'Processado': { color: colorsBase.Processado, data: Array(24).fill(0) }, 'Pendente': { color: colorsBase.Pendente, data: Array(24).fill(0) }, 'Erro': { color: colorsBase.Erro, data: Array(24).fill(0) }, 'Outros': { color: colorsBase.Outros, data: Array(24).fill(0) } };
             data.forEach(r => {
-                const valHora = r[tCol];
-                let h = 0;
-                if (valHora instanceof Date) { h = valHora.getHours(); }
-                else if (typeof valHora === 'number') { h = Math.floor(valHora < 1 ? valHora * 24 : valHora); }
-                else { h = parseInt(String(valHora || '0').split(':')[0]); }
-                const c = getStatusCategory(r[sCol]);
-                if(h >= 0 && h < 24 && cats[c]) cats[c].data[h]++;
+                const valHora = r[tCol]; let h = 0; if (valHora instanceof Date) h = valHora.getHours(); else if (typeof valHora === 'number') h = Math.floor(valHora < 1 ? valHora * 24 : valHora); else h = parseInt(String(valHora || '0').split(':')[0]);
+                const c = getStatusCategory(r[sCol]); if(h >= 0 && h < 24 && cats[c]) cats[c].data[h]++;
             });
-
-            const filteredDatasets = Object.entries(cats).filter(([_, obj]) => obj.data.some(val => val > 0)).map(([name, obj]) => ({
-                label: name, data: obj.data, borderColor: obj.color, backgroundColor: obj.color, tension: 0.3, pointRadius: 3, pointHoverRadius: 5
-            }));
-
-            const ctx = document.getElementById('lineChartCanvas').getContext('2d');
-            if(lineChart) lineChart.destroy();
+            const filteredDatasets = Object.entries(cats).filter(([_, obj]) => obj.data.some(val => val > 0)).map(([name, obj]) => ({ label: name, data: obj.data, borderColor: obj.color, backgroundColor: obj.color, tension: 0.3, pointRadius: 3, pointHoverRadius: 5 }));
+            const ctx = document.getElementById('lineChartCanvas').getContext('2d'); if(lineChart) lineChart.destroy();
             lineChart = new Chart(ctx, {
                 type: 'line', data: { labels: Array.from({length:24}, (_,i)=>`${String(i).padStart(2, '0')}:00`), datasets: filteredDatasets },
-                options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grace: '25%' } },
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
-                        datalabels: { display: (context) => context.dataset.data[context.dataIndex] > 0, align: 'top', offset: 4, color: (context) => context.dataset.borderColor, font: { size: 10, weight: 'bold' }, formatter: (v) => v || '' }
-                    }
-                }
+                options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grace: '25%' } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { display: (context) => context.dataset.data[context.dataIndex] > 0, align: 'top', offset: 4, color: (context) => context.dataset.borderColor, font: { size: 10, weight: 'bold' }, formatter: (v) => v || '' } } }
             });
         }
 
         function renderBarChart() {
-            const ctx = document.getElementById('barChartCanvas').getContext('2d');
-            if(barChart) { barChart.destroy(); barChart = null; }
-            const dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'];
-            const data = getFilteredData();
+            const ctx = document.getElementById('barChartCanvas').getContext('2d'); if(barChart) { barChart.destroy(); barChart = null; }
+            const dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
             const agg = { 'WMS': { e_ok:0, e_err:0, e_pend:0, s_ok:0, s_err:0, s_pend:0 }, 'PROTHEUS': { e_ok:0, e_err:0, e_pend:0, s_ok:0, s_err:0, s_pend:0 } };
-            const dirKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || 'Direção');
-            const stKey = statCol || (headers.find(h => normalizeString(h).includes('status')) || 'Status');
-            const sysKey = sysCol || (headers.find(h => {
-                const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo');
-            }) || '');
-            const isOEXP = currentFileName.toUpperCase().includes('OEXP') || currentFileName.toUpperCase().includes('ORDEM');
-
+            const dirKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || 'Direção'), stKey = statCol || (headers.find(h => normalizeString(h).includes('status')) || 'Status'), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || ''), isOEXP = currentFileName.toUpperCase().includes('OEXP');
             data.forEach(r => {
-                const dir = normalizeDirection(r[dirKey]), stat = getStatusCategory(r[stKey]);
-                if(dir === 'Outro') return;
+                const dir = normalizeDirection(r[dirKey]), stat = getStatusCategory(r[stKey]); if(dir === 'Outro') return;
                 const sysRaw = sysKey ? String(r[sysKey] || '').toUpperCase() : '';
-                const isWMS = sysRaw.includes('WMS');
-                const isProtheus = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
-                let targetSys = '';
-                const isRowWMS = isWMS || (!isProtheus && (isOEXP ? dir === 'Saída' : dir === 'Entrada'));
-                const isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
-                if (isRowWMS) targetSys = 'WMS';
-                else if (isRowProtheus) targetSys = 'PROTHEUS';
-                else targetSys = (dir === 'Entrada' ? 'WMS' : 'PROTHEUS');
-                if(dir === 'Entrada') { 
-                    if(stat === 'Processado') agg[targetSys].e_ok++; 
-                    else if(stat === 'Erro') agg[targetSys].e_err++; 
-                    else if(stat === 'Pendente') agg[targetSys].e_pend++;
-                } else if(dir === 'Saída') { 
-                    if(stat === 'Processado') agg[targetSys].s_ok++; 
-                    else if(stat === 'Erro') agg[targetSys].s_err++; 
-                    else if(stat === 'Pendente') agg[targetSys].s_pend++;
-                }
+                const isWMS = sysRaw.includes('WMS'), isProtheus = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
+                let targetSys = ''; const isRowWMS = isWMS || (!isProtheus && (isOEXP ? dir === 'Saída' : dir === 'Entrada')), isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
+                if (isRowWMS) targetSys = 'WMS'; else if (isRowProtheus) targetSys = 'PROTHEUS'; else targetSys = (dir === 'Entrada' ? 'WMS' : 'PROTHEUS');
+                if(dir === 'Entrada') { if(stat === 'Processado') agg[targetSys].e_ok++; else if(stat === 'Erro') agg[targetSys].e_err++; else if(stat === 'Pendente') agg[targetSys].e_pend++; }
+                else if(dir === 'Saída') { if(stat === 'Processado') agg[targetSys].s_ok++; else if(stat === 'Erro') agg[targetSys].s_err++; else if(stat === 'Pendente') agg[targetSys].s_pend++; }
             });
             const labels = ['WMS', 'PROTHEUS'];
             barChart = new Chart(ctx, {
@@ -966,183 +758,110 @@
                     { label: 'Entrada Pendente', data: labels.map(l => agg[l].e_pend), backgroundColor: '#fbbf24' },
                     { label: 'Entrada Erro', data: labels.map(l => agg[l].e_err), backgroundColor: colorsBase.EntradaErro }
                 ]},
-                options: { responsive:true, maintainAspectRatio:false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, grace: '10%' } },
-                    plugins: { 
-                        legend: { 
-                            position: 'right', 
-                            align: 'center',
-                            labels: { boxWidth: 12, font: { size: 10 } } 
-                        },
-                        datalabels: { display: (c) => c.dataset.data[c.dataIndex] > 0, color: (c) => getContrastColor(c.dataset.backgroundColor), font: { weight: 'bold', size: 10 }, formatter: v => v || '' }
-                    }
-                }
+                options: { responsive:true, maintainAspectRatio:false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, grace: '10%' } }, plugins: { legend: { position: 'right', align: 'center', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { display: (c) => c.dataset.data[c.dataIndex] > 0, color: (c) => getContrastColor(c.dataset.backgroundColor), font: { weight: 'bold', size: 10 }, formatter: v => v || '' } } }
             });
         }
 
         function renderDoughnutChart() {
-            const col = columnMapping['status'];
-            const data = getFilteredData();
-            const counts = {}; 
-            data.forEach(r => { const s = r[col] || 'N/A'; counts[s] = (counts[s]||0)+1; });
-            const labels = Object.keys(counts);
-            const bgColors = labels.map(l => colorsBase[getStatusCategory(l)] || colorsBase.Outros);
-            const ctx = document.getElementById('doughnutChartCanvas').getContext('2d');
+            const col = columnMapping['status'], data = getFilteredData(), counts = {}; data.forEach(r => { const s = r[col] || 'N/A'; counts[s] = (counts[s]||0)+1; });
+            const labels = Object.keys(counts), bgColors = labels.map(l => colorsBase[getStatusCategory(l)] || colorsBase.Outros), ctx = document.getElementById('doughnutChartCanvas').getContext('2d');
             if(doughnutChart) doughnutChart.destroy();
             doughnutChart = new Chart(ctx, {
                 type: 'doughnut', data: { labels, datasets: [{ data: Object.values(counts), backgroundColor: bgColors }]},
-                options: { responsive:true, maintainAspectRatio:false, cutout: '70%',
-                    plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } },
-                        datalabels: { display: true, color: (c) => getContrastColor(c.dataset.backgroundColor[c.dataIndex]), font: { weight: 'bold', size: 11 }, formatter: (v) => v || '' }
-                    }
-                }
+                options: { responsive:true, maintainAspectRatio:false, cutout: '70%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { display: true, color: (c) => getContrastColor(c.dataset.backgroundColor[c.dataIndex]), font: { weight: 'bold', size: 11 }, formatter: (v) => v || '' } } }
             });
         }
 
         function renderBalanceTable() {
-            const idCol = columnMapping['id'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'];
-            const data = getFilteredData();
+            const idCol = columnMapping['id'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
             const tbody = document.getElementById('balanceTableBody'); tbody.innerHTML = '';
-            const limitVal = document.getElementById('tableLimit').value;
-            const limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
-            const fId = normalizeString(document.getElementById('filter-id').value);
-            const fEnt = normalizeString(document.getElementById('filter-entradas').value);
-            const fSai = normalizeString(document.getElementById('filter-saidas').value);
-            const fDif = normalizeString(document.getElementById('filter-dif').value);
-            const fStat = normalizeString(document.getElementById('filter-status').value);
-            const iKey = idCol || (headers.find(h => {
-                const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem');
-            }) || headers[0]);
-            const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || '');
-            const sKey = statCol || (headers.find(h => normalizeString(h).includes('status')) || '');
-            const sysKey = sysCol || (headers.find(h => {
-                const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo');
-            }) || 'Sistema');
-            const isOEXP = currentFileName.toUpperCase().includes('OEXP') || currentFileName.toUpperCase().includes('ORDEM');
-            
+            const limitVal = document.getElementById('tableLimit').value, limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
+            const fId = normalizeString(document.getElementById('filter-id').value), fEnt = normalizeString(document.getElementById('filter-entradas').value), fSai = normalizeString(document.getElementById('filter-saidas').value), fDif = normalizeString(document.getElementById('filter-dif').value), fStat = normalizeString(document.getElementById('filter-status').value);
+            const iKey = idCol || (headers.find(h => { const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem'); }) || headers[0]);
+            const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || ''), sKey = statCol || (headers.find(h => normalizeString(h).includes('status')) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
+            const isOEXP = currentFileName.toUpperCase().includes('OEXP');
             const map = new Map();
             data.forEach(r => {
                 let id = r[iKey]; if(id === undefined || id === null || id === '') return;
-                id = String(id).trim(); 
-                const sysRaw = String(r[sysKey] || '').toUpperCase();
-                const isWMS = sysRaw.includes('WMS');
-                const isProtheus = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
+                id = String(id).trim(); const sysRaw = String(r[sysKey] || '').toUpperCase();
+                const isWMS = sysRaw.includes('WMS'), isProtheus = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
                 const dir = normalizeDirection(r[dKey]), stat = getStatusCategory(r[sKey]);
                 if(!map.has(id)) map.set(id, { e_ok: 0, s_ok: 0, e_pend: 0, s_pend: 0, e_err: 0, s_err: 0 });
-                const o = map.get(id);
-                const isRowWMS = isWMS || (!isProtheus && (isOEXP ? dir === 'Saída' : dir === 'Entrada'));
-                const isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
-                if(dir === 'Entrada' && isRowWMS) {
-                    if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++;
-                } else if(dir === 'Saída' && isRowProtheus) {
-                    if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++;
-                } else if(dir === 'Entrada' && isRowProtheus) {
-                    if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++;
-                } else if(dir === 'Saída' && isRowWMS) {
-                    if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++;
-                }
+                const o = map.get(id), isRowWMS = isWMS || (!isProtheus && (isOEXP ? dir === 'Saída' : dir === 'Entrada')), isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
+                if(dir === 'Entrada' && isRowWMS) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
+                else if(dir === 'Saída' && isRowProtheus) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
+                else if(dir === 'Entrada' && isRowProtheus) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
+                else if(dir === 'Saída' && isRowWMS) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
             });
-
-            if(map.size === 0) { 
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado no período.</td></tr>'; 
-                return; 
-            }
-            
+            if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado no período.</td></tr>'; return; }
             const entries = Array.from(map.entries());
             const filteredEntries = entries.filter(([id, v]) => {
+                if (analysisEvidences[id]) return false;
                 const isFullyOK = (v.s_ok > 0 && v.e_ok > 0 && v.s_err === 0 && v.e_err === 0 && v.s_pend === 0 && v.e_pend === 0);
                 if (isFullyOK) return false;
                 let statusParts = [];
-                if (v.s_err > 0) statusParts.push("Erro na saída");
-                if (v.e_err > 0) statusParts.push("Erro na entrada");
-                if (v.s_pend > 0) statusParts.push("Pendente de saída");
-                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0)) statusParts.push("Pendente de entrada");
-                const statusMsg = statusParts.join(" | ");
-                const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
-                const matchesId = !fId || normalizeString(id).includes(fId);
-                const matchesEnt = !fEnt || String(v.e_ok).includes(fEnt);
-                const matchesSai = !fSai || String(v.s_ok).includes(fSai);
-                const matchesDif = !fDif || String(diffVal).includes(fDif);
-                const matchesStat = !fStat || normalizeString(statusMsg).includes(fStat);
+                if (v.s_err > 0) statusParts.push("Erro na saída"); if (v.e_err > 0) statusParts.push("Erro na entrada"); if (v.s_pend > 0) statusParts.push("Pendente de saída"); if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0)) statusParts.push("Pendente de entrada");
+                const statusMsg = statusParts.join(" | "), diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
+                const matchesId = !fId || normalizeString(id).includes(fId), matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), matchesSai = !fSai || String(v.s_ok).includes(fSai), matchesDif = !fDif || String(diffVal).includes(fDif), matchesStat = !fStat || normalizeString(statusMsg).includes(fStat);
                 return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat;
             }).map(([id, v]) => {
-                let statusParts = [];
-                let statusClass = 'text-red-500 font-bold';
-                let diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
-                let diffClass = 'text-red-600 font-bold';
-                if (v.s_err > 0) statusParts.push("Erro na saída");
-                if (v.e_err > 0) statusParts.push("Erro na entrada");
+                let statusParts = [], statusClass = 'text-red-500 font-bold', diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1, diffClass = 'text-red-600 font-bold';
+                if (v.s_err > 0) statusParts.push("Erro na saída"); if (v.e_err > 0) statusParts.push("Erro na entrada");
                 if (v.s_pend > 0) { statusParts.push("Pendente de saída"); statusClass = 'text-orange-600 font-bold'; diffClass = 'text-orange-800 font-bold'; }
                 if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) { statusParts.push("Pendente de entrada"); statusClass = 'text-orange-600 font-bold'; diffClass = 'text-orange-800 font-bold'; }
                 if (v.s_err > 0 || v.e_err > 0) { statusClass = 'text-red-500 font-bold'; diffClass = 'text-red-600 font-bold'; }
                 return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass };
             });
-
             const displayEntries = filteredEntries.slice(0, limit);
-            if(displayEntries.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Nenhum registro crítico pendente ou com erro.</td></tr>';
-                return;
-            }
+            if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum registro crítico pendente ou com erro.</td></tr>'; return; }
             displayEntries.forEach(item => {
-                tbody.innerHTML += `<tr><td class="px-4 py-2 border-b font-mono text-xs">${item.id}</td><td class="px-4 py-2 border-b text-center text-green-700 bg-green-50/10">${item.v.e_ok}</td><td class="px-4 py-2 border-b text-center text-blue-700 bg-blue-50/10">${item.v.s_ok}</td><td class="px-4 py-2 border-b text-center bg-slate-50 ${item.diffClass}">${item.diffVal}</td><td class="px-4 py-2 border-b text-center text-[10px] ${item.statusClass}">${item.statusMsg}</td></tr>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="px-4 py-2 border-b font-mono text-xs">${item.id}</td>
+                        <td class="px-4 py-2 border-b text-center text-green-700 bg-green-50/10">${item.v.e_ok}</td>
+                        <td class="px-4 py-2 border-b text-center text-blue-700 bg-blue-50/10">${item.v.s_ok}</td>
+                        <td class="px-4 py-2 border-b text-center bg-slate-50 ${item.diffClass}">${item.diffVal}</td>
+                        <td class="px-4 py-2 border-b text-center text-[10px] ${item.statusClass}">${item.statusMsg}</td>
+                        <td class="px-4 py-2 border-b text-center">
+                            <button onclick="openEvidenceModal('${item.id}')" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition" title="Evidenciar Análise">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>`;
             });
-            if (filteredEntries.length > limit) {
-                tbody.innerHTML += `<tr><td colspan="5" class="p-2 text-center text-[10px] text-slate-400 italic bg-slate-50/50">Exibindo ${limit} de ${filteredEntries.length} exceções filtradas.</td></tr>`;
-            }
+            if (filteredEntries.length > limit) tbody.innerHTML += `<tr><td colspan="6" class="p-2 text-center text-[10px] text-slate-400 italic bg-slate-50/50">Exibindo ${limit} de ${filteredEntries.length} exceções filtradas.</td></tr>`;
+            lucide.createIcons();
         }
 
         function exportTableToCSV() {
-            const table = document.getElementById('asnTable'); if (!table) return;
-            let csv = [];
-            const rows = table.querySelectorAll('tr');
+            const table = document.getElementById('asnTable'); if (!table) return; let csv = []; const rows = table.querySelectorAll('tr');
             for (let i = 0; i < rows.length; i++) {
                 if(rows[i].querySelector('.table-filter-input')) continue;
-                const row = [], cols = rows[i].querySelectorAll('td, th');
-                if (cols.length === 1 && cols[0].hasAttribute('colspan')) continue;
-                for (let j = 0; j < cols.length; j++) {
-                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s+)/gm, ' ').trim();
-                    data = data.replace(/"/g, '""');
-                    row.push('"' + data + '"');
+                const row = [], cols = rows[i].querySelectorAll('td, th'); if (cols.length === 1 && cols[0].hasAttribute('colspan')) continue;
+                for (let j = 0; j < cols.length - 1; j++) { 
+                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s+)/gm, ' ').trim(); data = data.replace(/"/g, '""'); row.push('"' + data + '"');
                 }
                 csv.push(row.join(';'));
             }
-            const csvContent = "\uFEFF" + csv.join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
-            const fName = currentFileName.toUpperCase();
+            const csvContent = "\uFEFF" + csv.join('\n'), blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), link = document.createElement("a"), url = URL.createObjectURL(blob), timestamp = new Date().toISOString().slice(0,10).replace(/-/g, ''), fName = currentFileName.toUpperCase();
             let prefix = fName.includes('ASN') ? 'Excecoes_ASN' : (fName.includes('OEXP') ? 'Excecoes_OEXP' : 'Excecoes_Geral');
-            link.setAttribute("href", url); link.setAttribute("download", `${prefix}_${timestamp}.csv`);
-            link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            link.setAttribute("href", url); link.setAttribute("download", `${prefix}_${timestamp}.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
             showToast("Exportação de exceções concluída!", "success");
         }
 
-        function setupNotesAutoSave() {
-            const f = document.getElementById('notesField');
-            f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value);
-        }
+        function setupNotesAutoSave() { const f = document.getElementById('notesField'); f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value); }
         function loadSavedNotes() { document.getElementById('notesField').value = localStorage.getItem('notes_' + currentFileName) || ''; }
 
         async function resetApp() {
-            rawData = []; headers = []; currentFileName = '';
-            localStorage.removeItem('persist_dateStart'); localStorage.removeItem('persist_dateEnd');
-            localStorage.removeItem('persist_lineView');
-            await removeFromDB('last_raw_data');
-            await removeFromDB('last_headers');
-            await removeFromDB('last_filename');
-            await removeFromDB('last_mapping');
-            document.getElementById('dateStart').value = ''; document.getElementById('dateEnd').value = '';
-            document.getElementById('lineViewSelector').value = 'all';
-            document.getElementById('filter-id').value = ''; document.getElementById('filter-entradas').value = '';
-            document.getElementById('filter-saidas').value = ''; document.getElementById('filter-dif').value = '';
-            document.getElementById('filter-status').value = '';
-            updateAppState(false);
-            if(lineChart) lineChart.destroy(); if(barChart) barChart.destroy(); if(doughnutChart) doughnutChart.destroy();
+            rawData = []; headers = []; currentFileName = ''; analysisEvidences = {};
+            localStorage.removeItem('persist_dateStart'); localStorage.removeItem('persist_dateEnd'); localStorage.removeItem('persist_lineView');
+            await removeFromDB('last_raw_data'); await removeFromDB('last_headers'); await removeFromDB('last_filename'); await removeFromDB('last_mapping'); await removeFromDB('analysis_evidences');
+            document.getElementById('dateStart').value = ''; document.getElementById('dateEnd').value = ''; document.getElementById('lineViewSelector').value = 'all'; document.getElementById('filter-id').value = ''; document.getElementById('filter-entradas').value = ''; document.getElementById('filter-saidas').value = ''; document.getElementById('filter-dif').value = ''; document.getElementById('filter-status').value = '';
+            updateAppState(false); if(lineChart) lineChart.destroy(); if(barChart) barChart.destroy(); if(doughnutChart) doughnutChart.destroy();
         }
 
         function showToast(msg, type = "info") {
-            const t = document.getElementById('toast');
-            t.innerHTML = `<span>${msg}</span>`;
+            const t = document.getElementById('toast'); t.innerHTML = `<span>${msg}</span>`;
             const bg = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-slate-800');
             t.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl text-white text-sm z-50 transition-all duration-300 translate-y-0 opacity-100 ${bg}`;
             setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-24', 'opacity-0'); }, 3000);
