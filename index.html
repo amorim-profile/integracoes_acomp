@@ -296,8 +296,18 @@
                                 <input type="date" id="rep-filter-deadline" oninput="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
                             <div class="flex items-center gap-2">
-                                <button onclick="clearReportFilters()" class="w-full py-2 bg-white border border-slate-200 text-[10px] font-bold text-slate-600 rounded-lg hover:bg-slate-100 transition flex items-center justify-center gap-1 active:scale-95">
-                                    <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-500"></i> Limpar Filtros
+                                <div class="w-full">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Registos</label>
+                                    <select id="repTableLimit" onchange="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                                        <option value="10">10 itens</option>
+                                        <option value="25">25 itens</option>
+                                        <option value="50">50 itens</option>
+                                        <option value="100">100 itens</option>
+                                        <option value="all">Ver Tudo</option>
+                                    </select>
+                                </div>
+                                <button onclick="clearReportFilters()" class="w-full py-2 bg-white border border-slate-200 text-[10px] font-bold text-slate-600 rounded-lg hover:bg-slate-100 transition flex items-center justify-center gap-1 active:scale-95 h-[34px] mt-4">
+                                    <i data-lucide="filter-x" class="w-3.5 h-3.5 text-red-500"></i> Limpar
                                 </button>
                             </div>
                         </div>
@@ -737,22 +747,24 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const dashView = document.getElementById('dashboardView');
-            const repView = document.getElementById('reportView');
+            const reportView = document.getElementById('reportView');
             const icon = document.getElementById('toggleSidebarIcon');
             
+            if (!sidebar || !dashView || !reportView) return;
+
             const isHidden = sidebar.classList.contains('hidden');
             
             if (isHidden) {
                 // Abrir sidebar
                 sidebar.classList.remove('hidden');
                 dashView.classList.replace('xl:col-span-12', 'xl:col-span-9');
-                repView.classList.replace('xl:col-span-12', 'xl:col-span-9');
+                reportView.classList.replace('xl:col-span-12', 'xl:col-span-9');
                 icon.setAttribute('data-lucide', 'panel-left-close');
             } else {
                 // Fechar sidebar
                 sidebar.classList.add('hidden');
                 dashView.classList.replace('xl:col-span-9', 'xl:col-span-12');
-                repView.classList.replace('xl:col-span-9', 'xl:col-span-12');
+                reportView.classList.replace('xl:col-span-9', 'xl:col-span-12');
                 icon.setAttribute('data-lucide', 'panel-left-open');
             }
             if(window.lucide) lucide.createIcons();
@@ -787,6 +799,7 @@
             document.getElementById('rep-filter-system').value = '';
             document.getElementById('rep-filter-status').value = '';
             document.getElementById('rep-filter-deadline').value = '';
+            document.getElementById('repTableLimit').value = '10';
             renderActionsTable();
             showToast("Filtros limpos.", "info");
         }
@@ -899,6 +912,9 @@
             const filterSystem = document.getElementById('rep-filter-system').value;
             const filterStatus = document.getElementById('rep-filter-status').value;
             const filterDeadline = document.getElementById('rep-filter-deadline').value;
+            
+            const limitVal = document.getElementById('repTableLimit').value;
+            const limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
 
             const filtered = registeredActions.filter(act => {
                 const matchesDate = !filterDate || act.date === filterDate;
@@ -915,7 +931,9 @@
             }
             if(emptyState) emptyState.classList.add('hidden');
 
-            filtered.forEach(act => {
+            const displayList = filtered.slice(0, limit);
+
+            displayList.forEach(act => {
                 const statusColor = act.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 
                                   (act.status === 'Pendente' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
                 
@@ -930,29 +948,29 @@
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4 font-mono text-xs text-slate-500">${fmtDate}</td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap">${fmtDate}</td>
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
                             <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold border border-indigo-100">
                                 ${act.priorityId || '-'}
                             </span>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 whitespace-nowrap">
                             ${act.ref ? `<div class="font-bold text-slate-700">${act.ref}</div>` : ''}
                             <div class="text-[10px] uppercase font-black ${sysTag}">${act.system || 'N/A'}</div>
                         </td>
-                        <td class="px-6 py-4 text-slate-600">${act.user}</td>
+                        <td class="px-6 py-4 text-slate-600 whitespace-nowrap">${act.user}</td>
                         <td onclick="openDetailsModal(${act.id})" class="px-6 py-4 text-slate-600 clickable-row-cell">
                             <div class="text-xs font-black text-slate-800 uppercase tracking-tight mb-0.5">${act.title || 'Sem Título'}</div>
                             <div class="max-w-xs truncate text-[11px] text-slate-500" title="Clique para ver detalhes">${act.desc}</div>
                             ${act.resolution ? `<div class="text-[10px] text-emerald-600 mt-1 italic truncate max-w-xs"><strong>Solução:</strong> ${act.resolution}</div>` : ''}
                         </td>
-                        <td class="px-6 py-4 text-center font-mono text-xs text-slate-500">${fmtDeadline}</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}">
+                        <td class="px-6 py-4 text-center font-mono text-xs text-slate-500 whitespace-nowrap">${fmtDeadline}</td>
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                            <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor} min-w-[90px] text-center">
                                 ${act.status}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-6 py-4 text-right whitespace-nowrap">
                             <div class="flex items-center justify-end gap-2">
                                 <button onclick="openActionModal(${act.id})" class="text-slate-300 hover:text-blue-500 transition p-1" title="Editar">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
