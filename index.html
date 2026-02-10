@@ -15,7 +15,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (v9 compat) -->
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
@@ -47,18 +47,17 @@
         .clickable-row-cell { cursor: pointer; transition: background-color 0.2s; }
         .clickable-row-cell:hover { background-color: #f8fafc; }
 
-        /* Estilos para Transição da Sidebar */
         #sidebar { transition: all 0.3s ease-in-out; }
         #dashboardView, #reportView { transition: all 0.3s ease-in-out; }
-        
-        /* Indicador de Sync */
         #syncIndicator { transition: opacity 0.3s; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
 
-    <!-- Input Oculto para Fallback de Pasta (Ambientes Restritos) -->
+    <!-- Fallback de input de ficheiros -->
     <input type="file" id="folderInputFallback" webkitdirectory directory multiple class="hidden" onchange="handleFallbackFolder(this)">
+    <!-- Input para Importação de Ações -->
+    <input type="file" id="importActionsInput" class="hidden" accept=".xlsx, .xls, .csv" onchange="handleActionsImport(this)">
 
     <div id="app" class="max-w-[1400px] mx-auto px-4 py-6">
         <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -105,7 +104,7 @@
         </header>
 
         <div id="main-content" class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            <!-- Sidebar Compartilhada -->
+            <!-- Sidebar -->
             <div id="sidebar" class="xl:col-span-3 space-y-6 shrink-0">
                 <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
@@ -248,8 +247,11 @@
                             <p class="text-sm text-slate-500">Gestão e acompanhamento de intervenções e correções de dados.</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button onclick="exportActionsToCSV()" class="px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-100 flex items-center gap-2 active:scale-95">
-                                <i data-lucide="download" class="w-4 h-4 text-white"></i> Exportar Ações
+                            <button onclick="exportActionsToCSV()" class="px-4 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg text-sm font-bold hover:bg-emerald-100 transition flex items-center gap-2 active:scale-95">
+                                <i data-lucide="download" class="w-4 h-4"></i> Exportar
+                            </button>
+                            <button onclick="document.getElementById('importActionsInput').click()" class="px-4 py-2.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg text-sm font-bold hover:bg-indigo-100 transition flex items-center gap-2 active:scale-95">
+                                <i data-lucide="file-up" class="w-4 h-4"></i> Importar Planilha
                             </button>
                             <button onclick="openActionModal()" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100 flex items-center gap-2 active:scale-95">
                                 <i data-lucide="plus-circle" class="w-5 h-5"></i> Registar Nova Ação
@@ -257,16 +259,20 @@
                         </div>
                     </div>
 
-                    <!-- Filtros do Report -->
+                    <!-- Filtros -->
                     <div class="mb-6 p-5 bg-slate-50 border border-slate-200 rounded-xl shadow-inner">
                         <div class="flex items-center gap-2 mb-3">
                             <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
                             <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Filtrar Relatórios</h3>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data Registro</label>
                                 <input type="date" id="rep-filter-date" oninput="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Prioridade</label>
+                                <input type="text" id="rep-filter-priority" placeholder="Filtrar ID..." oninput="renderActionsTable()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sistema</label>
@@ -302,6 +308,7 @@
                             <thead class="bg-slate-50 text-slate-600">
                                 <tr>
                                     <th class="px-6 py-4 font-bold border-b">Data</th>
+                                    <th class="px-6 py-4 font-bold border-b text-center">ID Prioridade</th>
                                     <th class="px-6 py-4 font-bold border-b">Sistema</th>
                                     <th class="px-6 py-4 font-bold border-b">Responsável</th>
                                     <th class="px-6 py-4 font-bold border-b">Ação / Solução</th>
@@ -310,9 +317,7 @@
                                     <th class="px-6 py-4 font-bold border-b text-right">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="actionsTableBody" class="divide-y divide-slate-100">
-                                <!-- Conteúdo gerado via JS -->
-                            </tbody>
+                            <tbody id="actionsTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                     <div id="actionsEmptyState" class="py-20 flex flex-col items-center justify-center text-slate-400">
@@ -324,7 +329,7 @@
         </div>
     </div>
 
-    <!-- Modal de Detalhes da Ação -->
+    <!-- Modal Detalhes -->
     <div id="detailsModal" class="hidden fixed inset-0 z-[130] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-indigo-50 flex items-center justify-between">
@@ -349,6 +354,10 @@
                     </div>
                 </div>
                 <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ID Prioridade</label>
+                    <div id="detPriority" class="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded border border-indigo-100 w-fit"></div>
+                </div>
+                <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Descrição / Ação</label>
                     <div id="detDesc" class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100"></div>
                 </div>
@@ -365,7 +374,7 @@
         </div>
     </div>
 
-    <!-- Modal de Registo de Ações -->
+    <!-- Modal Registo -->
     <div id="actionModal" class="hidden fixed inset-0 z-[120] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col animate-in fade-in zoom-in duration-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
@@ -376,9 +385,16 @@
             </div>
             <form id="actionForm" onsubmit="saveAction(event)" class="p-6 space-y-4 overflow-y-auto custom-scrollbar grow">
                 <input type="hidden" id="actId">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Título da Ação</label>
-                    <input type="text" id="actTitle" required placeholder="Ex: Correção de ASN Pendente" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Título da Ação</label>
+                        <input type="text" id="actTitle" required placeholder="Ex: Correção de ASN Pendente" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-xs font-bold text-indigo-400 uppercase mb-1">ID Prioridade (Alfanumérico)</label>
+                        <input type="text" id="actPriority" placeholder="Ex: P1-A20" class="w-full p-2.5 text-sm border border-indigo-100 rounded-lg bg-indigo-50/30 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -437,7 +453,7 @@
         </div>
     </div>
 
-    <!-- Modal de Evidência de Análise -->
+    <!-- Modal Evidência -->
     <div id="evidenceModal" class="hidden fixed inset-0 z-[110] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
@@ -466,8 +482,8 @@
     <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl translate-y-24 opacity-0 transition-all duration-300 z-50 text-sm font-medium flex items-center gap-2"></div>
 
     <script>
-        // --- Firebase Configuration & Initialization ---
-        const firebaseConfig = {
+        // --- Configuração Firebase ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyA00vCKMI2yTqKMQ0LXtBYzv29p1WaKQqg",
             authDomain: "ntegracoesacomp.firebaseapp.com",
             projectId: "ntegracoesacomp",
@@ -477,10 +493,8 @@
             measurementId: "G-7768LKSBT9"
         };
 
-        // Global variables provided by the environment (fallback to defaults if not present)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ntegracoesacomp';
         
-        // Initialize Firebase
         const fbApp = firebase.initializeApp(firebaseConfig);
         const db = fbApp.firestore();
         const auth = fbApp.auth();
@@ -555,17 +569,34 @@
             } catch (e) {}
         }
 
-        // --- Firebase Logic ---
+        // --- Lógica Firebase ---
 
         async function initFirebaseAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await auth.signInWithCustomToken(__initial_auth_token);
-                } else {
-                    await auth.signInAnonymously();
+            const maxRetries = 3;
+            let attempt = 0;
+            
+            const tryAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await auth.signInWithCustomToken(__initial_auth_token);
+                        return true;
+                    }
+                    throw new Error("Token não disponível");
+                } catch (error) {
+                    try {
+                        await auth.signInAnonymously();
+                        return true;
+                    } catch (anonError) {
+                        return false;
+                    }
                 }
-            } catch (error) {
-                console.error("Firebase Auth Error:", error);
+            };
+
+            while (attempt < maxRetries) {
+                const success = await tryAuth();
+                if (success) break;
+                attempt++;
+                await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
             }
         }
 
@@ -576,23 +607,19 @@
             if(syncIcon) syncIcon.classList.remove('opacity-0');
 
             try {
-                // Rule 1: Using strict path artifacts/{appId}/public/data/actions
                 const actionsCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('actions');
                 
-                // Rule 2: Fetching all to sync in memory (last writer wins simple logic)
                 const snapshot = await actionsCol.get();
                 const remoteActions = snapshot.docs.map(doc => ({ ...doc.data(), firebaseId: doc.id }));
 
                 if (remoteActions.length > 0) {
-                    // Merge local and remote
-                    // For this app, we'll prioritize Cloud data as the "Source of Truth"
-                    // but we keep the local state for speed.
                     registeredActions = remoteActions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
                     await saveToDB('registered_actions', registeredActions);
+                    checkAndMapNewValuesFromList(registeredActions);
                     renderActionsTable();
                 }
             } catch (error) {
-                console.error("Firebase Sync Error:", error);
+                console.error("Erro na sincronização Firebase:", error);
             } finally {
                 setTimeout(() => { if(syncIcon) syncIcon.classList.add('opacity-0'); }, 2000);
             }
@@ -602,7 +629,6 @@
             if (!firebaseUser) return;
             try {
                 const actionsCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('actions');
-                // Use the local ID as the document ID to prevent duplicates
                 await actionsCol.doc(action.id.toString()).set(action);
             } catch (error) {
                 console.error("Firebase Upload Error:", error);
@@ -619,7 +645,94 @@
             }
         }
 
-        // --- Navegação e UI ---
+        // --- Importação de Ações ---
+        
+        async function handleActionsImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const dataRaw = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(dataRaw, { type: 'array', cellDates: true });
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet);
+                    
+                    if (rows.length === 0) {
+                        showToast("Planilha vazia ou layout inválido.", "error");
+                        return;
+                    }
+
+                    let importedCount = 0;
+                    const now = Date.now();
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        
+                        const dateObj = getSafeDate(row["Data"]);
+                        const deadlineObj = getSafeDate(row["Prazo"]);
+                        
+                        const actionData = {
+                            id: now + i,
+                            date: dateObj ? formatDateToISO(dateObj) : formatDateToISO(new Date()),
+                            priorityId: String(row["ID Prioridade"] || row["Prioridade"] || ""),
+                            system: String(row["Sistema"] || "N/A"),
+                            ref: String(row["Ref"] || ""),
+                            user: String(row["Responsavel"] || "Sistema"),
+                            title: String(row["Titulo"] || "Importado"),
+                            desc: String(row["Descricao"] || ""),
+                            resolution: String(row["Solucao"] || ""),
+                            deadline: deadlineObj ? formatDateToISO(deadlineObj) : formatDateToISO(new Date()),
+                            status: String(row["Estado"] || "Pendente")
+                        };
+
+                        registeredActions.unshift(actionData);
+                        if (firebaseUser) await uploadActionToFirebase(actionData);
+                        importedCount++;
+                    }
+
+                    await saveToDB('registered_actions', registeredActions);
+                    checkAndMapNewValuesFromList(registeredActions);
+                    renderActionsTable();
+                    showToast(`${importedCount} ações importadas com sucesso!`, "success");
+                    input.value = ""; 
+                } catch (err) {
+                    console.error("Erro na importação:", err);
+                    showToast("Erro ao processar planilha.", "error");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function checkAndMapNewValuesFromList(list) {
+            const statusDropdown = document.getElementById('actStatus');
+            const systemDropdown = document.getElementById('actSystem');
+            const filterStatusDropdown = document.getElementById('rep-filter-status');
+            const filterSystemDropdown = document.getElementById('rep-filter-system');
+
+            if (!statusDropdown || !systemDropdown) return;
+
+            const existingStatuses = Array.from(statusDropdown.options).map(opt => opt.value);
+            const existingSystems = Array.from(systemDropdown.options).map(opt => opt.value);
+
+            list.forEach(act => {
+                if (act.status && !existingStatuses.includes(act.status)) {
+                    const newOpt = new Option(act.status, act.status);
+                    statusDropdown.add(newOpt);
+                    if (filterStatusDropdown) filterStatusDropdown.add(new Option(act.status, act.status));
+                    existingStatuses.push(act.status);
+                }
+                if (act.system && !existingSystems.includes(act.system)) {
+                    const newOpt = new Option(act.system, act.system);
+                    systemDropdown.add(newOpt);
+                    if (filterSystemDropdown) filterSystemDropdown.add(new Option(act.system, act.system));
+                    existingSystems.push(act.system);
+                }
+            });
+        }
+
+        // --- UI Base ---
         
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -630,11 +743,13 @@
             const isHidden = sidebar.classList.contains('hidden');
             
             if (isHidden) {
+                // Abrir sidebar
                 sidebar.classList.remove('hidden');
                 dashView.classList.replace('xl:col-span-12', 'xl:col-span-9');
                 repView.classList.replace('xl:col-span-12', 'xl:col-span-9');
                 icon.setAttribute('data-lucide', 'panel-left-close');
             } else {
+                // Fechar sidebar
                 sidebar.classList.add('hidden');
                 dashView.classList.replace('xl:col-span-9', 'xl:col-span-12');
                 repView.classList.replace('xl:col-span-9', 'xl:col-span-12');
@@ -664,10 +779,11 @@
             if(window.lucide) lucide.createIcons();
         }
 
-        // --- Report Page Logic ---
+        // --- Report Actions ---
 
         function clearReportFilters() {
             document.getElementById('rep-filter-date').value = '';
+            document.getElementById('rep-filter-priority').value = '';
             document.getElementById('rep-filter-system').value = '';
             document.getElementById('rep-filter-status').value = '';
             document.getElementById('rep-filter-deadline').value = '';
@@ -682,6 +798,7 @@
             document.getElementById('detTitle').textContent = act.title || 'Sem Título';
             document.getElementById('detSystem').textContent = act.system || 'N/A';
             document.getElementById('detRef').textContent = act.ref || 'N/A';
+            document.getElementById('detPriority').textContent = act.priorityId || 'N/A';
             document.getElementById('detDesc').textContent = act.desc || 'Sem descrição.';
             document.getElementById('detResolution').textContent = act.resolution || 'Nenhuma resolução registada ainda.';
             
@@ -704,6 +821,7 @@
                     modalTitle.innerHTML = '<i data-lucide="edit-3" class="text-blue-600"></i> Editar Registo de Ação';
                     document.getElementById('actId').value = act.id;
                     document.getElementById('actTitle').value = act.title || '';
+                    document.getElementById('actPriority').value = act.priorityId || '';
                     document.getElementById('actDate').value = act.date || '';
                     document.getElementById('actRef').value = act.ref || '';
                     document.getElementById('actSystem').value = act.system || '';
@@ -735,6 +853,7 @@
             const actionData = {
                 id: editId ? parseInt(editId) : Date.now(),
                 title: document.getElementById('actTitle').value,
+                priorityId: document.getElementById('actPriority').value,
                 date: document.getElementById('actDate').value,
                 ref: document.getElementById('actRef').value,
                 system: document.getElementById('actSystem').value,
@@ -754,11 +873,8 @@
                 showToast("Ação registada!", "success");
             }
 
-            // Persistence
             await saveToDB('registered_actions', registeredActions);
-            
-            // Cloud Sync
-            uploadActionToFirebase(actionData);
+            if (firebaseUser) uploadActionToFirebase(actionData);
             
             closeActionModal();
             renderActionsTable();
@@ -767,10 +883,7 @@
         async function deleteAction(id) {
             registeredActions = registeredActions.filter(a => a.id !== id);
             await saveToDB('registered_actions', registeredActions);
-            
-            // Cloud Sync
-            removeActionFromFirebase(id);
-            
+            if (firebaseUser) removeActionFromFirebase(id);
             renderActionsTable();
             showToast("Registo removido.", "info");
         }
@@ -782,16 +895,18 @@
             tbody.innerHTML = '';
 
             const filterDate = document.getElementById('rep-filter-date').value;
+            const filterPriority = normalizeString(document.getElementById('rep-filter-priority').value);
             const filterSystem = document.getElementById('rep-filter-system').value;
             const filterStatus = document.getElementById('rep-filter-status').value;
             const filterDeadline = document.getElementById('rep-filter-deadline').value;
 
             const filtered = registeredActions.filter(act => {
                 const matchesDate = !filterDate || act.date === filterDate;
+                const matchesPriority = !filterPriority || normalizeString(act.priorityId).includes(filterPriority);
                 const matchesSystem = !filterSystem || act.system === filterSystem;
                 const matchesStatus = !filterStatus || act.status === filterStatus;
                 const matchesDeadline = !filterDeadline || act.deadline === filterDeadline;
-                return matchesDate && matchesSystem && matchesStatus && matchesDeadline;
+                return matchesDate && matchesPriority && matchesSystem && matchesStatus && matchesDeadline;
             });
 
             if (filtered.length === 0) {
@@ -806,9 +921,21 @@
                 
                 const sysTag = act.system === 'Protheus' ? 'text-indigo-600' : 'text-orange-600';
 
+                const fmtDate = (typeof act.date === 'string' && act.date.includes('-')) 
+                    ? act.date.split('-').reverse().join('/') 
+                    : (act.date || '-');
+                const fmtDeadline = (typeof act.deadline === 'string' && act.deadline.includes('-')) 
+                    ? act.deadline.split('-').reverse().join('/') 
+                    : (act.deadline || '-');
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4 font-mono text-xs text-slate-500">${act.date ? act.date.split('-').reverse().join('/') : '-'}</td>
+                        <td class="px-6 py-4 font-mono text-xs text-slate-500">${fmtDate}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold border border-indigo-100">
+                                ${act.priorityId || '-'}
+                            </span>
+                        </td>
                         <td class="px-6 py-4">
                             ${act.ref ? `<div class="font-bold text-slate-700">${act.ref}</div>` : ''}
                             <div class="text-[10px] uppercase font-black ${sysTag}">${act.system || 'N/A'}</div>
@@ -819,7 +946,7 @@
                             <div class="max-w-xs truncate text-[11px] text-slate-500" title="Clique para ver detalhes">${act.desc}</div>
                             ${act.resolution ? `<div class="text-[10px] text-emerald-600 mt-1 italic truncate max-w-xs"><strong>Solução:</strong> ${act.resolution}</div>` : ''}
                         </td>
-                        <td class="px-6 py-4 text-center font-mono text-xs text-slate-500">${act.deadline ? act.deadline.split('-').reverse().join('/') : '-'}</td>
+                        <td class="px-6 py-4 text-center font-mono text-xs text-slate-500">${fmtDeadline}</td>
                         <td class="px-6 py-4 text-center">
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}">
                                 ${act.status}
@@ -841,16 +968,14 @@
             lucide.createIcons();
         }
 
-        // Função para exportar a tabela de Report (Ações)
         function exportActionsToCSV() {
             if (registeredActions.length === 0) {
                 showToast("Não existem ações para exportar.", "info");
                 return;
             }
 
-            const csvHeaders = ["Data", "Sistema", "Ref", "Responsavel", "Titulo", "Descricao", "Solucao", "Prazo", "Estado"];
+            const csvHeaders = ["Data", "ID Prioridade", "Sistema", "Ref", "Responsavel", "Titulo", "Descricao", "Solucao", "Prazo", "Estado"];
             
-            // Tratamento de aspas e quebras de linha para o CSV
             const formatCell = (val) => {
                 let text = String(val || "").replace(/"/g, '""');
                 return `"${text}"`;
@@ -858,6 +983,7 @@
 
             const rows = registeredActions.map(act => [
                 formatCell(act.date),
+                formatCell(act.priorityId),
                 formatCell(act.system),
                 formatCell(act.ref),
                 formatCell(act.user),
@@ -870,7 +996,6 @@
 
             const csvContent = csvHeaders.join(";") + "\n" + rows.map(r => r.join(";")).join("\n");
             
-            // Inclusão do BOM (\uFEFF) para garantir tratamento correto de acentos no Excel
             const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -886,7 +1011,7 @@
             showToast("Exportação de ações concluída!", "success");
         }
 
-        // --- Core Functions (Dashboard) ---
+        // --- Core Analítico ---
 
         function getSafeDate(val) {
             if (!val) return null;
@@ -937,7 +1062,6 @@
                 if(window.lucide) lucide.createIcons();
                 setupNotesAutoSave();
 
-                // 1. Initial Local Data Load
                 directoryHandle = await getFromDB('last_dir_handle');
                 if (directoryHandle) {
                     document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
@@ -946,6 +1070,7 @@
 
                 analysisEvidences = await getFromDB('analysis_evidences') || {};
                 registeredActions = await getFromDB('registered_actions') || [];
+                checkAndMapNewValuesFromList(registeredActions);
 
                 const savedData = await getFromDB('last_raw_data');
                 if (savedData) {
@@ -958,7 +1083,6 @@
                     loadSavedNotes();
                 }
 
-                // 2. Firebase Initialization & Background Sync
                 await initFirebaseAuth();
                 auth.onAuthStateChanged(user => {
                     firebaseUser = user;
@@ -1006,7 +1130,6 @@
             renderBalanceTable(); 
         }
 
-        // Função de Fallback para seleção de pastas em ambientes restritos (como Canvas)
         function handleFallbackFolder(input) {
             const files = Array.from(input.files);
             const container = document.getElementById('dirFileList');
@@ -1272,7 +1395,8 @@
             const ctx = canvas.getContext('2d'); if(barChart) { barChart.destroy(); barChart = null; }
             const dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
             const agg = { 'WMS': { e_ok:0, e_err:0, e_pend:0, s_ok:0, s_err:0, s_pend:0 }, 'PROTHEUS': { e_ok:0, e_err:0, e_pend:0, s_ok:0, s_err:0, s_pend:0 } };
-            const dirKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || 'Direção'), stKey = statCol || (headers.find(h => normalizeString(h).includes('status')) || 'Status'), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || ''), isOEXP = currentFileName.toUpperCase().includes('OEXP');
+            const dirKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || 'Direção'), stKey = statCol || (headers.find(h => { const n = normalizeString(h); return n.includes('status') || n.includes('sit'); }) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
+            const isOEXP = currentFileName.toUpperCase().includes('OEXP');
             data.forEach(r => {
                 const dir = normalizeDirection(r[dirKey]), stat = getStatusCategory(r[stKey]); if(dir === 'Outro') return;
                 const sysRaw = sysKey ? String(r[sysKey] || '').toUpperCase() : '';
@@ -1312,6 +1436,7 @@
             const tbody = document.getElementById('balanceTableBody'); if(!tbody) return;
             tbody.innerHTML = '';
             const limitVal = document.getElementById('tableLimit').value, limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
+            
             const filterIdInput = document.getElementById('filter-id');
             const filterEntInput = document.getElementById('filter-entradas');
             const filterSaiInput = document.getElementById('filter-saidas');
@@ -1325,9 +1450,10 @@
             const fStat = normalizeString(filterStatInput ? filterStatInput.value : '');
 
             const iKey = idCol || (headers.find(h => { const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem'); }) || headers[0]);
-            const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || ''), sKey = statCol || (headers.find(h => normalizeString(h).includes('status')) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
+            const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || ''), sKey = statCol || (headers.find(h => { const n = normalizeString(h); return n.includes('status') || n.includes('sit'); }) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
             const isOEXP = currentFileName.toUpperCase().includes('OEXP');
             const map = new Map();
+            
             data.forEach(r => {
                 let id = r[iKey]; if(id === undefined || id === null || id === '') return;
                 id = String(id).trim(); const sysRaw = String(r[sysKey] || '').toUpperCase();
@@ -1340,6 +1466,7 @@
                 else if(dir === 'Entrada' && isRowProtheus) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
                 else if(dir === 'Saída' && isRowWMS) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
             });
+            
             if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado.</td></tr>'; return; }
             const entries = Array.from(map.entries());
             const filteredEntries = entries.filter(([id, v]) => {
@@ -1358,6 +1485,7 @@
                 if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) { statusParts.push("Pendente entrada"); statusClass = 'text-orange-600 font-bold'; }
                 return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass };
             });
+            
             const displayEntries = filteredEntries.slice(0, limit);
             if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nada crítico no período.</td></tr>'; return; }
             displayEntries.forEach(item => {
@@ -1376,22 +1504,6 @@
                     </tr>`;
             });
             lucide.createIcons();
-        }
-
-        function exportTableToCSV() {
-            const table = document.getElementById('asnTable'); if (!table) return; let csv = []; const rows = table.querySelectorAll('tr');
-            for (let i = 0; i < rows.length; i++) {
-                if(rows[i].querySelector('.table-filter-input')) continue;
-                const row = [], cols = rows[i].querySelectorAll('td, th'); if (cols.length === 1 && cols[0].hasAttribute('colspan')) continue;
-                for (let j = 0; j < cols.length - 1; j++) { 
-                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s+)/gm, ' ').trim(); data = data.replace(/"/g, '""'); row.push('"' + data + '"');
-                }
-                csv.push(row.join(';'));
-            }
-            const csvContent = "\uFEFF" + csv.join('\n'), blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), link = document.createElement("a"), url = URL.createObjectURL(blob), timestamp = new Date().toISOString().slice(0,10).replace(/-/g, ''), fName = currentFileName.toUpperCase();
-            let prefix = fName.includes('ASN') ? 'Excecoes_ASN' : (fName.includes('OEXP') ? 'Excecoes_OEXP' : 'Excecoes_Geral');
-            link.setAttribute("href", url); link.setAttribute("download", `${prefix}_${timestamp}.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            showToast("Exportação concluída!", "success");
         }
 
         function setupNotesAutoSave() { const f = document.getElementById('notesField'); if (f) f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value); }
