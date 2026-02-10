@@ -15,6 +15,11 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -45,6 +50,9 @@
         /* Estilos para Transição da Sidebar */
         #sidebar { transition: all 0.3s ease-in-out; }
         #dashboardView, #reportView { transition: all 0.3s ease-in-out; }
+        
+        /* Indicador de Sync */
+        #syncIndicator { transition: opacity 0.3s; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
@@ -66,6 +74,11 @@
                     <div id="lastUpdateTag" class="hidden flex items-center gap-1.5 px-2.5 py-1 bg-white text-slate-500 text-[10px] font-semibold rounded-full border border-slate-200 shadow-sm animate-in fade-in slide-in-from-left-2 duration-500">
                         <i data-lucide="clock" class="w-3 h-3 text-blue-500"></i>
                         <span id="lastUpdateText"></span>
+                    </div>
+                    <!-- Sync Badge -->
+                    <div id="syncIndicator" class="opacity-0 flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100 shadow-sm">
+                        <i data-lucide="cloud-check" class="w-3 h-3"></i>
+                        <span>Cloud Synced</span>
                     </div>
                 </div>
                 
@@ -453,6 +466,25 @@
     <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl translate-y-24 opacity-0 transition-all duration-300 z-50 text-sm font-medium flex items-center gap-2"></div>
 
     <script>
+        // --- Firebase Configuration & Initialization ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA00vCKMI2yTqKMQ0LXtBYzv29p1WaKQqg",
+            authDomain: "ntegracoesacomp.firebaseapp.com",
+            projectId: "ntegracoesacomp",
+            storageBucket: "ntegracoesacomp.firebasestorage.app",
+            messagingSenderId: "557779665159",
+            appId: "1:557779665159:web:27e81f752ab6403b8fc5a2",
+            measurementId: "G-7768LKSBT9"
+        };
+
+        // Global variables provided by the environment (fallback to defaults if not present)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ntegracoesacomp';
+        
+        // Initialize Firebase
+        const fbApp = firebase.initializeApp(firebaseConfig);
+        const db = fbApp.firestore();
+        const auth = fbApp.auth();
+
         Chart.register(ChartDataLabels);
 
         let rawData = [];
@@ -462,6 +494,7 @@
         let analysisEvidences = {}; 
         let currentEvidenceId = null;
         let registeredActions = []; 
+        let firebaseUser = null;
 
         let lineChart = null;
         let barChart = null;
@@ -520,6 +553,70 @@
                 tx.objectStore(STORE_NAME).delete(key);
                 return new Promise((resolve) => tx.oncomplete = resolve);
             } catch (e) {}
+        }
+
+        // --- Firebase Logic ---
+
+        async function initFirebaseAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await auth.signInWithCustomToken(__initial_auth_token);
+                } else {
+                    await auth.signInAnonymously();
+                }
+            } catch (error) {
+                console.error("Firebase Auth Error:", error);
+            }
+        }
+
+        async function syncActionsWithFirebase() {
+            if (!firebaseUser) return;
+            
+            const syncIcon = document.getElementById('syncIndicator');
+            if(syncIcon) syncIcon.classList.remove('opacity-0');
+
+            try {
+                // Rule 1: Using strict path artifacts/{appId}/public/data/actions
+                const actionsCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('actions');
+                
+                // Rule 2: Fetching all to sync in memory (last writer wins simple logic)
+                const snapshot = await actionsCol.get();
+                const remoteActions = snapshot.docs.map(doc => ({ ...doc.data(), firebaseId: doc.id }));
+
+                if (remoteActions.length > 0) {
+                    // Merge local and remote
+                    // For this app, we'll prioritize Cloud data as the "Source of Truth"
+                    // but we keep the local state for speed.
+                    registeredActions = remoteActions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+                    await saveToDB('registered_actions', registeredActions);
+                    renderActionsTable();
+                }
+            } catch (error) {
+                console.error("Firebase Sync Error:", error);
+            } finally {
+                setTimeout(() => { if(syncIcon) syncIcon.classList.add('opacity-0'); }, 2000);
+            }
+        }
+
+        async function uploadActionToFirebase(action) {
+            if (!firebaseUser) return;
+            try {
+                const actionsCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('actions');
+                // Use the local ID as the document ID to prevent duplicates
+                await actionsCol.doc(action.id.toString()).set(action);
+            } catch (error) {
+                console.error("Firebase Upload Error:", error);
+            }
+        }
+
+        async function removeActionFromFirebase(actionId) {
+            if (!firebaseUser) return;
+            try {
+                const actionsCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('actions');
+                await actionsCol.doc(actionId.toString()).delete();
+            } catch (error) {
+                console.error("Firebase Delete Error:", error);
+            }
         }
 
         // --- Navegação e UI ---
@@ -657,7 +754,12 @@
                 showToast("Ação registada!", "success");
             }
 
+            // Persistence
             await saveToDB('registered_actions', registeredActions);
+            
+            // Cloud Sync
+            uploadActionToFirebase(actionData);
+            
             closeActionModal();
             renderActionsTable();
         }
@@ -665,6 +767,10 @@
         async function deleteAction(id) {
             registeredActions = registeredActions.filter(a => a.id !== id);
             await saveToDB('registered_actions', registeredActions);
+            
+            // Cloud Sync
+            removeActionFromFirebase(id);
+            
             renderActionsTable();
             showToast("Registo removido.", "info");
         }
@@ -831,6 +937,7 @@
                 if(window.lucide) lucide.createIcons();
                 setupNotesAutoSave();
 
+                // 1. Initial Local Data Load
                 directoryHandle = await getFromDB('last_dir_handle');
                 if (directoryHandle) {
                     document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
@@ -850,6 +957,14 @@
                     runDashboardAnalysis();
                     loadSavedNotes();
                 }
+
+                // 2. Firebase Initialization & Background Sync
+                await initFirebaseAuth();
+                auth.onAuthStateChanged(user => {
+                    firebaseUser = user;
+                    if (user) syncActionsWithFirebase();
+                });
+
             } catch (err) {
                 console.warn("Inicialização segura concluída com avisos.");
             }
