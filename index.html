@@ -48,7 +48,7 @@
         .clickable-row-cell:hover { background-color: #f8fafc; }
 
         #sidebar { transition: all 0.3s ease-in-out; }
-        #dashboardView, #reportView { transition: all 0.3s ease-in-out; }
+        #dashboardView, #reportView, #dashboardBottomView { transition: all 0.3s ease-in-out; }
         #syncIndicator { transition: opacity 0.3s; }
     </style>
 </head>
@@ -128,16 +128,24 @@
                     <div id="detectedCols" class="space-y-1 mb-4 flex flex-wrap gap-1"></div>
                     <button onclick="runDashboardAnalysis()" class="mt-2 w-full py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition">Recalcular</button>
                 </section>
+
+                <!-- Quadro de Notas -->
+                <section id="section-notes" class="hidden bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[350px] border-l-4 border-l-yellow-400">
+                    <h2 class="text-base font-semibold mb-2 flex items-center gap-2 text-slate-800">
+                        <i data-lucide="clipboard-edit" class="w-4 h-4 text-yellow-500"></i> Notas
+                    </h2>
+                    <textarea id="notesField" class="grow w-full p-3 text-sm border border-slate-200 rounded-lg bg-yellow-50/30 focus:ring-2 focus:ring-yellow-400 resize-none custom-scrollbar" placeholder="Observações..."></textarea>
+                </section>
             </div>
 
-            <!-- Dashboard View -->
+            <!-- Dashboard Charts View -->
             <div id="dashboardView" class="xl:col-span-9 space-y-6">
                 <div id="emptyState" class="bg-white rounded-xl border-2 border-dashed border-slate-200 h-[500px] flex flex-col items-center justify-center text-slate-400">
                     <i data-lucide="bar-chart-big" class="w-16 h-16 mb-4 text-slate-300"></i>
                     <p class="text-lg font-medium text-slate-500">Aguardando dados</p>
                 </div>
 
-                <div id="dashboardContainer" class="hidden space-y-6">
+                <div id="dashboardChartsContainer" class="hidden space-y-6">
                     <section id="section-timeline" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                             <h2 class="text-base font-semibold flex items-center gap-2">
@@ -179,60 +187,6 @@
                             </div>
                         </section>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <section id="section-table" class="md:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[400px]">
-                            <div class="flex items-center justify-between mb-4 shrink-0">
-                                <div class="flex items-center gap-4">
-                                    <h2 id="balanceTableTitle" class="text-base font-semibold flex items-center gap-2">
-                                        <i data-lucide="arrow-right-left" class="w-4 h-4 text-orange-500"></i> Entradas e Saídas - ASN
-                                    </h2>
-                                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg">
-                                        <label for="tableLimit" class="text-[10px] font-bold text-slate-400 uppercase">Mostrar:</label>
-                                        <select id="tableLimit" onchange="renderBalanceTable()" class="bg-transparent border-0 focus:ring-0 text-xs font-bold text-slate-600 cursor-pointer">
-                                            <option value="10">10</option>
-                                            <option value="25">25</option>
-                                            <option value="50">50</option>
-                                            <option value="all">Tudo</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <button onclick="exportTableToCSV()" class="text-[10px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2 transition shadow-sm active:scale-95">
-                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
-                                </button>
-                            </div>
-                            <div class="overflow-auto custom-scrollbar grow border rounded-lg">
-                                <table id="asnTable" class="w-full text-sm text-left relative">
-                                    <thead class="bg-slate-50 text-slate-600 sticky top-0 shadow-sm z-10">
-                                        <tr>
-                                            <th id="idColumnHeader" class="px-4 py-2 font-semibold border-b">ASN (ID)</th>
-                                            <th class="px-4 py-2 font-semibold border-b text-center text-green-600">Entradas (OK)</th>
-                                            <th class="px-4 py-2 font-semibold border-b text-center text-blue-600">Saídas (OK)</th>
-                                            <th class="px-4 py-2 font-semibold border-b text-center bg-slate-100">Diferença (OK)</th>
-                                            <th class="px-4 py-2 font-semibold border-b text-center text-red-500">Estado de Erro</th>
-                                            <th class="px-4 py-2 font-semibold border-b text-center text-slate-400">Ação</th>
-                                        </tr>
-                                        <tr class="bg-white">
-                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-id" class="table-filter-input" placeholder="Pesquisar ID..." oninput="renderBalanceTable()"></th>
-                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-entradas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
-                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-saidas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
-                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-dif" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
-                                            <th class="px-2 py-1 border-b"><input type="text" id="filter-status" class="table-filter-input text-center" placeholder="Filtrar estado..." oninput="renderBalanceTable()"></th>
-                                            <th class="px-2 py-1 border-b"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="balanceTableBody" class="divide-y divide-slate-100"></tbody>
-                                </table>
-                            </div>
-                        </section>
-
-                        <section id="section-notes" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[400px] border-l-4 border-l-yellow-400">
-                            <h2 class="text-base font-semibold mb-2 flex items-center gap-2 text-slate-800">
-                                <i data-lucide="clipboard-edit" class="w-4 h-4 text-yellow-500"></i> Notas
-                            </h2>
-                            <textarea id="notesField" class="grow w-full p-3 text-sm border border-slate-200 rounded-lg bg-yellow-50/30 focus:ring-2 focus:ring-yellow-400 resize-none custom-scrollbar" placeholder="Observações..."></textarea>
-                        </section>
-                    </div>
                 </div>
             </div>
 
@@ -259,7 +213,7 @@
                         </div>
                     </div>
 
-                    <!-- Filtros -->
+                    <!-- Filtros Relatório -->
                     <div class="mb-6 p-5 bg-slate-50 border border-slate-200 rounded-xl shadow-inner">
                         <div class="flex items-center gap-2 mb-3">
                             <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
@@ -336,6 +290,56 @@
                     </div>
                 </section>
             </div>
+
+            <!-- Dashboard Bottom View (Tabela em Largura Total) -->
+            <div id="dashboardBottomView" class="hidden xl:col-span-12">
+                <section id="section-table" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col h-[550px]">
+                    <div class="flex items-center justify-between mb-4 shrink-0">
+                        <div class="flex items-center gap-4">
+                            <h2 id="balanceTableTitle" class="text-base font-semibold flex items-center gap-2">
+                                <i data-lucide="arrow-right-left" class="w-4 h-4 text-orange-500"></i> Entradas e Saídas - ASN
+                            </h2>
+                            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg">
+                                <label for="tableLimit" class="text-[10px] font-bold text-slate-400 uppercase">Mostrar:</label>
+                                <select id="tableLimit" onchange="renderBalanceTable()" class="bg-transparent border-0 focus:ring-0 text-xs font-bold text-slate-600 cursor-pointer">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="all">Tudo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="exportTableToCSV()" class="text-[10px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg font-bold flex items-center gap-2 transition shadow-sm active:scale-95">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
+                        </button>
+                    </div>
+                    <div class="overflow-auto custom-scrollbar grow border rounded-lg">
+                        <table id="asnTable" class="w-full text-sm text-left relative">
+                            <thead class="bg-slate-50 text-slate-600 sticky top-0 shadow-sm z-10">
+                                <tr>
+                                    <th id="idColumnHeader" class="px-4 py-2 font-semibold border-b">ASN (ID)</th>
+                                    <th class="px-4 py-2 font-semibold border-b text-center text-green-600">Entradas (OK)</th>
+                                    <th class="px-4 py-2 font-semibold border-b text-center text-blue-600">Saídas (OK)</th>
+                                    <th class="px-4 py-2 font-semibold border-b text-center bg-slate-100">Diferença (OK)</th>
+                                    <th class="px-4 py-2 font-semibold border-b text-center text-red-500">Estado de Erro</th>
+                                    <th class="px-4 py-2 font-semibold border-b text-center text-slate-500">Motivo / Análise</th>
+                                    <th class="px-4 py-2 font-semibold border-b text-center text-slate-400">Ação</th>
+                                </tr>
+                                <tr class="bg-white">
+                                    <th class="px-2 py-1 border-b"><input type="text" id="filter-id" class="table-filter-input" placeholder="Pesquisar ID..." oninput="renderBalanceTable()"></th>
+                                    <th class="px-2 py-1 border-b"><input type="text" id="filter-entradas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
+                                    <th class="px-2 py-1 border-b"><input type="text" id="filter-saidas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
+                                    <th class="px-2 py-1 border-b"><input type="text" id="filter-dif" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
+                                    <th class="px-2 py-1 border-b"><input type="text" id="filter-status" class="table-filter-input text-center" placeholder="Filtrar estado..." oninput="renderBalanceTable()"></th>
+                                    <th class="px-2 py-1 border-b"><input type="text" id="filter-motivo" class="table-filter-input text-center" placeholder="Filtrar motivo..." oninput="renderBalanceTable()"></th>
+                                    <th class="px-2 py-1 border-b"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="balanceTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
         </div>
     </div>
 
@@ -395,7 +399,6 @@
             </div>
             <form id="actionForm" onsubmit="saveAction(event)" class="p-6 space-y-4 overflow-y-auto custom-scrollbar grow">
                 <input type="hidden" id="actId">
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Título da Ação</label>
@@ -406,7 +409,6 @@
                         <input type="text" id="actPriority" placeholder="Ex: P1-A20" class="w-full p-2.5 text-sm border border-indigo-100 rounded-lg bg-indigo-50/30 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Data da Ação</label>
@@ -417,7 +419,6 @@
                         <input type="text" id="actRef" placeholder="Ex: 12345" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Sistema Envolvido</label>
@@ -432,7 +433,6 @@
                         <input type="date" id="actDeadline" required class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Responsável</label>
                     <input type="text" id="actUser" required placeholder="Nome do colaborador" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -463,7 +463,7 @@
         </div>
     </div>
 
-    <!-- Modal Evidência -->
+    <!-- Modal Evidência Atualizado -->
     <div id="evidenceModal" class="hidden fixed inset-0 z-[110] modal-overlay flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 overflow-hidden">
             <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
@@ -476,14 +476,19 @@
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ID Selecionado</label>
                 <div id="evidenceTargetId" class="text-sm font-mono bg-slate-100 p-2 rounded border border-slate-200 mb-4 text-slate-700"></div>
                 
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota de Evidência / Análise</label>
-                <textarea id="evidenceNote" class="w-full h-32 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none outline-none bg-slate-50 transition-all" placeholder="Escreva aqui o resultado da sua análise para este ID..."></textarea>
-                <p class="text-[10px] text-slate-400 mt-2 italic">* Ao guardar, este comentário será movido para a secção de Notas e o item sairá desta tabela.</p>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota de Evidência / Motivo</label>
+                <textarea id="evidenceNote" class="w-full h-32 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none outline-none bg-slate-50 transition-all" placeholder="Escreva o motivo pelo qual este registro está em análise..."></textarea>
+                
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-center gap-3">
+                    <input type="checkbox" id="evidenceCompleted" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded cursor-pointer">
+                    <label for="evidenceCompleted" class="text-sm font-bold text-indigo-900 cursor-pointer">Marcar como Concluído</label>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-2 italic">* Se não marcar como concluído, o registro permanecerá na tabela com a nota salva.</p>
             </div>
             <div class="p-6 bg-slate-50 flex items-center justify-end gap-3">
                 <button onclick="closeEvidenceModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
                 <button onclick="saveEvidence()" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition flex items-center gap-2">
-                    <i data-lucide="save" class="w-4 h-4"></i> Guardar e Limpar
+                    <i data-lucide="save" class="w-4 h-4"></i> Guardar Alteração
                 </button>
             </div>
         </div>
@@ -504,7 +509,6 @@
         };
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ntegracoesacomp';
-        
         const fbApp = firebase.initializeApp(firebaseConfig);
         const db = fbApp.firestore();
         const auth = fbApp.auth();
@@ -580,11 +584,9 @@
         }
 
         // --- Lógica Firebase ---
-
         async function initFirebaseAuth() {
             const maxRetries = 3;
             let attempt = 0;
-            
             const tryAuth = async () => {
                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -601,7 +603,6 @@
                     }
                 }
             };
-
             while (attempt < maxRetries) {
                 const success = await tryAuth();
                 if (success) break;
@@ -612,16 +613,12 @@
 
         async function syncActionsWithFirebase() {
             if (!firebaseUser) return;
-            
             const syncIcon = document.getElementById('syncIndicator');
             if(syncIcon) syncIcon.classList.remove('opacity-0');
-
             try {
                 const actionsCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('actions');
-                
                 const snapshot = await actionsCol.get();
                 const remoteActions = snapshot.docs.map(doc => ({ ...doc.data(), firebaseId: doc.id }));
-
                 if (remoteActions.length > 0) {
                     registeredActions = remoteActions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
                     await saveToDB('registered_actions', registeredActions);
@@ -656,11 +653,9 @@
         }
 
         // --- Importação de Ações ---
-        
         async function handleActionsImport(input) {
             const file = input.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
@@ -668,21 +663,16 @@
                     const wb = XLSX.read(dataRaw, { type: 'array', cellDates: true });
                     const sheet = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(sheet);
-                    
                     if (rows.length === 0) {
                         showToast("Planilha vazia ou layout inválido.", "error");
                         return;
                     }
-
                     let importedCount = 0;
                     const now = Date.now();
-
                     for (let i = 0; i < rows.length; i++) {
                         const row = rows[i];
-                        
                         const dateObj = getSafeDate(row["Data"]);
                         const deadlineObj = getSafeDate(row["Prazo"]);
-                        
                         const actionData = {
                             id: now + i,
                             date: dateObj ? formatDateToISO(dateObj) : formatDateToISO(new Date()),
@@ -696,12 +686,10 @@
                             deadline: deadlineObj ? formatDateToISO(deadlineObj) : formatDateToISO(new Date()),
                             status: String(row["Estado"] || "Pendente")
                         };
-
                         registeredActions.unshift(actionData);
                         if (firebaseUser) await uploadActionToFirebase(actionData);
                         importedCount++;
                     }
-
                     await saveToDB('registered_actions', registeredActions);
                     checkAndMapNewValuesFromList(registeredActions);
                     renderActionsTable();
@@ -720,12 +708,9 @@
             const systemDropdown = document.getElementById('actSystem');
             const filterStatusDropdown = document.getElementById('rep-filter-status');
             const filterSystemDropdown = document.getElementById('rep-filter-system');
-
             if (!statusDropdown || !systemDropdown) return;
-
             const existingStatuses = Array.from(statusDropdown.options).map(opt => opt.value);
             const existingSystems = Array.from(systemDropdown.options).map(opt => opt.value);
-
             list.forEach(act => {
                 if (act.status && !existingStatuses.includes(act.status)) {
                     const newOpt = new Option(act.status, act.status);
@@ -743,25 +728,19 @@
         }
 
         // --- UI Base ---
-        
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const dashView = document.getElementById('dashboardView');
             const reportView = document.getElementById('reportView');
             const icon = document.getElementById('toggleSidebarIcon');
-            
             if (!sidebar || !dashView || !reportView) return;
-
             const isHidden = sidebar.classList.contains('hidden');
-            
             if (isHidden) {
-                // Abrir sidebar
                 sidebar.classList.remove('hidden');
                 dashView.classList.replace('xl:col-span-12', 'xl:col-span-9');
                 reportView.classList.replace('xl:col-span-12', 'xl:col-span-9');
                 icon.setAttribute('data-lucide', 'panel-left-close');
             } else {
-                // Fechar sidebar
                 sidebar.classList.add('hidden');
                 dashView.classList.replace('xl:col-span-9', 'xl:col-span-12');
                 reportView.classList.replace('xl:col-span-9', 'xl:col-span-12');
@@ -773,26 +752,28 @@
         function switchView(view) {
             const dashboardView = document.getElementById('dashboardView');
             const reportView = document.getElementById('reportView');
+            const bottomView = document.getElementById('dashboardBottomView');
             const navDash = document.getElementById('nav-dashboard');
             const navRep = document.getElementById('nav-report');
 
             if (view === 'dashboard') {
-                if(dashboardView) dashboardView.classList.remove('hidden');
-                if(reportView) reportView.classList.add('hidden');
-                if(navDash) navDash.classList.add('active');
-                if(navRep) navRep.classList.remove('active');
+                dashboardView.classList.remove('hidden');
+                reportView.classList.add('hidden');
+                navDash.classList.add('active');
+                navRep.classList.remove('active');
+                if (rawData.length > 0) bottomView.classList.remove('hidden');
             } else {
-                if(dashboardView) dashboardView.classList.add('hidden');
-                if(reportView) reportView.classList.remove('hidden');
-                if(navDash) navDash.classList.remove('active');
-                if(navRep) navRep.classList.add('active');
+                dashboardView.classList.add('hidden');
+                reportView.classList.remove('hidden');
+                bottomView.classList.add('hidden');
+                navDash.classList.remove('active');
+                navRep.classList.add('active');
                 renderActionsTable();
             }
             if(window.lucide) lucide.createIcons();
         }
 
         // --- Report Actions ---
-
         function clearReportFilters() {
             document.getElementById('rep-filter-date').value = '';
             document.getElementById('rep-filter-priority').value = '';
@@ -807,14 +788,12 @@
         function openDetailsModal(id) {
             const act = registeredActions.find(a => a.id === id);
             if (!act) return;
-
             document.getElementById('detTitle').textContent = act.title || 'Sem Título';
             document.getElementById('detSystem').textContent = act.system || 'N/A';
             document.getElementById('detRef').textContent = act.ref || 'N/A';
             document.getElementById('detPriority').textContent = act.priorityId || 'N/A';
             document.getElementById('detDesc').textContent = act.desc || 'Sem descrição.';
             document.getElementById('detResolution').textContent = act.resolution || 'Nenhuma resolução registada ainda.';
-            
             document.getElementById('detailsModal').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -827,7 +806,6 @@
             const form = document.getElementById('actionForm');
             const modalTitle = document.getElementById('actionModalTitle');
             form.reset();
-            
             if (id) {
                 const act = registeredActions.find(a => a.id === id);
                 if (act) {
@@ -850,7 +828,6 @@
                 document.getElementById('actDate').value = formatDateToISO(new Date());
                 document.getElementById('actDeadline').value = formatDateToISO(new Date());
             }
-            
             document.getElementById('actionModal').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -862,7 +839,6 @@
         async function saveAction(e) {
             e.preventDefault();
             const editId = document.getElementById('actId').value;
-            
             const actionData = {
                 id: editId ? parseInt(editId) : Date.now(),
                 title: document.getElementById('actTitle').value,
@@ -876,7 +852,6 @@
                 desc: document.getElementById('actDesc').value,
                 resolution: document.getElementById('actResolution').value
             };
-
             if (editId) {
                 const index = registeredActions.findIndex(a => a.id === parseInt(editId));
                 if (index !== -1) registeredActions[index] = actionData;
@@ -885,10 +860,8 @@
                 registeredActions.unshift(actionData);
                 showToast("Ação registada!", "success");
             }
-
             await saveToDB('registered_actions', registeredActions);
             if (firebaseUser) uploadActionToFirebase(actionData);
-            
             closeActionModal();
             renderActionsTable();
         }
@@ -906,16 +879,13 @@
             const emptyState = document.getElementById('actionsEmptyState');
             if(!tbody) return;
             tbody.innerHTML = '';
-
             const filterDate = document.getElementById('rep-filter-date').value;
             const filterPriority = normalizeString(document.getElementById('rep-filter-priority').value);
             const filterSystem = document.getElementById('rep-filter-system').value;
             const filterStatus = document.getElementById('rep-filter-status').value;
             const filterDeadline = document.getElementById('rep-filter-deadline').value;
-            
             const limitVal = document.getElementById('repTableLimit').value;
             const limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
-
             const filtered = registeredActions.filter(act => {
                 const matchesDate = !filterDate || act.date === filterDate;
                 const matchesPriority = !filterPriority || normalizeString(act.priorityId).includes(filterPriority);
@@ -924,28 +894,20 @@
                 const matchesDeadline = !filterDeadline || act.deadline === filterDeadline;
                 return matchesDate && matchesPriority && matchesSystem && matchesStatus && matchesDeadline;
             });
-
             if (filtered.length === 0) {
                 if(emptyState) emptyState.classList.remove('hidden');
                 return;
             }
             if(emptyState) emptyState.classList.add('hidden');
-
             const displayList = filtered.slice(0, limit);
-
             displayList.forEach(act => {
                 const statusColor = act.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 
                                   (act.status === 'Pendente' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700');
-                
                 const sysTag = act.system === 'Protheus' ? 'text-indigo-600' : 'text-orange-600';
-
                 const fmtDate = (typeof act.date === 'string' && act.date.includes('-')) 
-                    ? act.date.split('-').reverse().join('/') 
-                    : (act.date || '-');
+                    ? act.date.split('-').reverse().join('/') : (act.date || '-');
                 const fmtDeadline = (typeof act.deadline === 'string' && act.deadline.includes('-')) 
-                    ? act.deadline.split('-').reverse().join('/') 
-                    : (act.deadline || '-');
-
+                    ? act.deadline.split('-').reverse().join('/') : (act.deadline || '-');
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap">${fmtDate}</td>
@@ -991,46 +953,29 @@
                 showToast("Não existem ações para exportar.", "info");
                 return;
             }
-
             const csvHeaders = ["Data", "ID Prioridade", "Sistema", "Ref", "Responsavel", "Titulo", "Descricao", "Solucao", "Prazo", "Estado"];
-            
             const formatCell = (val) => {
                 let text = String(val || "").replace(/"/g, '""');
                 return `"${text}"`;
             };
-
             const rows = registeredActions.map(act => [
-                formatCell(act.date),
-                formatCell(act.priorityId),
-                formatCell(act.system),
-                formatCell(act.ref),
-                formatCell(act.user),
-                formatCell(act.title),
-                formatCell(act.desc),
-                formatCell(act.resolution),
-                formatCell(act.deadline),
-                formatCell(act.status)
+                formatCell(act.date), formatCell(act.priorityId), formatCell(act.system), formatCell(act.ref), formatCell(act.user), formatCell(act.title), formatCell(act.desc), formatCell(act.resolution), formatCell(act.deadline), formatCell(act.status)
             ]);
-
             const csvContent = csvHeaders.join(";") + "\n" + rows.map(r => r.join(";")).join("\n");
-            
             const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
-            
             link.setAttribute("href", url);
             link.setAttribute("download", `Relatorio_Acoes_${timestamp}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
             showToast("Exportação de ações concluída!", "success");
         }
 
         // --- Core Analítico ---
-
         function getSafeDate(val) {
             if (!val) return null;
             if (val instanceof Date) return val;
@@ -1065,7 +1010,6 @@
         }
 
         let columnMapping = { 'data': '', 'hora': '', 'sistema': '', 'direcao': '', 'status': '', 'id': '' };
-
         const possibleNames = {
             'data': ['data', 'date', 'dia', 'dt_ocorrencia', 'período', 'dt'],
             'hora': ['hora', 'time', 'horario', 'hr_ocorrencia', 'hr'],
@@ -1079,17 +1023,14 @@
             try {
                 if(window.lucide) lucide.createIcons();
                 setupNotesAutoSave();
-
                 directoryHandle = await getFromDB('last_dir_handle');
                 if (directoryHandle) {
                     document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
                     if(window.lucide) lucide.createIcons();
                 }
-
                 analysisEvidences = await getFromDB('analysis_evidences') || {};
                 registeredActions = await getFromDB('registered_actions') || [];
                 checkAndMapNewValuesFromList(registeredActions);
-
                 const savedData = await getFromDB('last_raw_data');
                 if (savedData) {
                     rawData = savedData;
@@ -1100,13 +1041,11 @@
                     runDashboardAnalysis();
                     loadSavedNotes();
                 }
-
                 await initFirebaseAuth();
                 auth.onAuthStateChanged(user => {
                     firebaseUser = user;
                     if (user) syncActionsWithFirebase();
                 });
-
             } catch (err) {
                 console.warn("Inicialização segura concluída com avisos.");
             }
@@ -1114,8 +1053,10 @@
 
         function openEvidenceModal(id) {
             currentEvidenceId = id;
+            const evidence = analysisEvidences[id] || { note: '', completed: false };
             document.getElementById('evidenceTargetId').textContent = id;
-            document.getElementById('evidenceNote').value = '';
+            document.getElementById('evidenceNote').value = evidence.note || '';
+            document.getElementById('evidenceCompleted').checked = evidence.completed || false;
             document.getElementById('evidenceModal').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -1123,27 +1064,40 @@
 
         async function saveEvidence() {
             const note = document.getElementById('evidenceNote').value.trim();
-            if(!note) { showToast("Escreva uma nota.", "error"); return; }
+            const completed = document.getElementById('evidenceCompleted').checked;
             
-            const timestamp = new Date().toISOString();
-            const timeStr = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-            const dateStr = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
+            if(!note && !completed) { 
+                // Se tudo vazio, removemos qualquer registro prévio
+                delete analysisEvidences[currentEvidenceId];
+            } else {
+                const timestamp = new Date().toISOString();
+                const timeStr = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
 
-            analysisEvidences[currentEvidenceId] = { note: note, timestamp: timestamp };
-            await saveToDB('analysis_evidences', analysisEvidences);
+                analysisEvidences[currentEvidenceId] = { 
+                    note: note, 
+                    timestamp: timestamp, 
+                    completed: completed 
+                };
 
-            const notesEl = document.getElementById('notesField');
-            const fName = currentFileName.toUpperCase();
-            const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
-            const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} - ${note}`;
-            if(notesEl) {
-                notesEl.value += newNoteEntry;
-                if (currentFileName) {
-                    localStorage.setItem('notes_' + currentFileName, notesEl.value);
+                // Adicionar às notas gerais apenas se for uma nova nota ou alteração relevante
+                if (note) {
+                    const notesEl = document.getElementById('notesField');
+                    const fName = currentFileName.toUpperCase();
+                    const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
+                    const statusStr = completed ? "[CONCLUÍDO]" : "[ANÁLISE]";
+                    const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} ${statusStr} - ${note}`;
+                    if(notesEl) {
+                        notesEl.value += newNoteEntry;
+                        if (currentFileName) {
+                            localStorage.setItem('notes_' + currentFileName, notesEl.value);
+                        }
+                    }
                 }
             }
-            
-            showToast("Evidência guardada!", "success");
+
+            await saveToDB('analysis_evidences', analysisEvidences);
+            showToast(completed ? "ID marcado como concluído!" : "Evidência guardada!", "success");
             closeEvidenceModal();
             renderBalanceTable(); 
         }
@@ -1156,9 +1110,7 @@
             container.classList.remove('hidden');
             const refreshBtn = document.getElementById('refreshDirBtn');
             if(refreshBtn) refreshBtn.classList.remove('hidden');
-
             const excelFiles = files.filter(f => ['.xlsx', '.xls', '.csv'].some(ex => f.name.toLowerCase().endsWith(ex)));
-            
             excelFiles.forEach(file => {
                 const b = document.createElement('button');
                 b.setAttribute('data-filename', file.name);
@@ -1167,7 +1119,6 @@
                 b.onclick = () => processFile(file);
                 container.appendChild(b);
             });
-            
             if (window.lucide) lucide.createIcons();
             if (excelFiles.length > 0) {
                 showToast(`${excelFiles.length} ficheiros carregados da pasta.`, "success");
@@ -1181,7 +1132,6 @@
                 document.getElementById('folderInputFallback').click();
                 return;
             }
-
             try {
                 const isReactivating = document.getElementById('mainFolderBtn').innerText.includes('Reativar');
                 if (isReactivating && directoryHandle) {
@@ -1192,7 +1142,6 @@
                         return;
                     }
                 }
-
                 const handle = await window.showDirectoryPicker({ mode: 'read' });
                 directoryHandle = handle;
                 await saveToDB('last_dir_handle', handle); 
@@ -1200,7 +1149,6 @@
                 await scanDirectory(true); 
                 showToast("Pasta mapeada com sucesso!", "success");
             } catch(e) {
-                console.warn("Erro no DirectoryPicker:", e.name);
                 if (e.name === 'SecurityError' || e.name === 'NotAllowedError') {
                     document.getElementById('folderInputFallback').click();
                 } else if (e.name !== 'AbortError') {
@@ -1223,23 +1171,17 @@
 
         async function scanDirectory(skipPermissionCheck = false) {
             if (!directoryHandle) return; 
-            
             try {
                 if (!skipPermissionCheck) {
                     const isGranted = await verifyPermission(directoryHandle); 
-                    if (!isGranted) { 
-                        showToast("Permissão de leitura negada.", "error"); 
-                        return; 
-                    }
+                    if (!isGranted) { showToast("Permissão de leitura negada.", "error"); return; }
                 }
-
                 const container = document.getElementById('dirFileList'); 
                 if(!container) return;
                 container.innerHTML = ''; 
                 container.classList.remove('hidden'); 
                 const refreshBtn = document.getElementById('refreshDirBtn');
                 if(refreshBtn) refreshBtn.classList.remove('hidden');
-
                 for await (const entry of directoryHandle.values()) {
                     try {
                         if (entry.kind === 'file' && ['.xlsx', '.xls', '.csv'].some(ex => entry.name.toLowerCase().endsWith(ex))) {
@@ -1251,22 +1193,15 @@
                                 try {
                                     const file = await entry.getFile();
                                     processFile(file);
-                                } catch (err) {
-                                    showToast("Erro ao abrir ficheiro.", "error");
-                                }
+                                } catch (err) { showToast("Erro ao abrir ficheiro.", "error"); }
                             };
                             container.appendChild(b);
                         }
-                    } catch (entryErr) {
-                        console.warn("Falha ao ler entrada específica:", entryErr);
-                    }
+                    } catch (entryErr) {}
                 }
                 highlightActiveFile(); 
                 lucide.createIcons();
-            } catch (err) { 
-                console.error("Erro no scanDirectory:", err);
-                showToast("Erro ao ler conteúdo da pasta.", "error"); 
-            }
+            } catch (err) { showToast("Erro ao ler conteúdo da pasta.", "error"); }
         }
 
         async function processFile(file) {
@@ -1282,11 +1217,8 @@
                         await saveToDB('last_raw_data', rawData); await saveToDB('last_headers', headers); await saveToDB('last_filename', currentFileName); await saveToDB('last_mapping', columnMapping);
                         updateAppState(true); runDashboardAnalysis(); loadSavedNotes();
                     }
-                } catch (err) {
-                    showToast("Erro ao processar conteúdo do Excel.", "error");
-                }
+                } catch (err) { showToast("Erro ao processar conteúdo do Excel.", "error"); }
             };
-            reader.onerror = () => showToast("Erro ao ler dados do ficheiro.", "error");
             reader.readAsArrayBuffer(file);
         }
 
@@ -1304,35 +1236,25 @@
         }
 
         function updateAppState(has) {
-            const ids = ['fileInfo', 'statusSection', 'dashboardContainer'];
+            const ids = ['fileInfo', 'statusSection', 'section-notes', 'dashboardChartsContainer', 'dashboardBottomView'];
             ids.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.toggle('hidden', !has);
             });
             const emptyState = document.getElementById('emptyState');
             if (emptyState) emptyState.classList.toggle('hidden', has);
-            
             const fileNameEl = document.getElementById('fileName');
             if (fileNameEl) fileNameEl.textContent = currentFileName;
-
             const lastUpdateTag = document.getElementById('lastUpdateTag'), lastUpdateText = document.getElementById('lastUpdateText');
             if (has) {
                 const now = new Date(), timeStr = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }), dateStr = now.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
                 if (lastUpdateText) lastUpdateText.textContent = `${dateStr} às ${timeStr}`; 
-                if (lastUpdateTag) {
-                    lastUpdateTag.classList.remove('hidden'); 
-                    lastUpdateTag.classList.add('flex');
-                }
+                if (lastUpdateTag) { lastUpdateTag.classList.remove('hidden'); lastUpdateTag.classList.add('flex'); }
                 highlightActiveFile(); renderDetectedCols();
                 const titleEl = document.getElementById('balanceTableTitle'), headerEl = document.getElementById('idColumnHeader'), fName = currentFileName.toUpperCase();
                 if (fName.includes('ASN')) { if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - ASN'; if(headerEl) headerEl.textContent = 'ASN (ID)'; }
                 else if (fName.includes('OEXP')) { if(titleEl) titleEl.innerHTML = '<i data-lucide=\"arrow-right-left\" class=\"w-4 h-4 text-orange-500\"></i> Entradas e Saídas - Ordem de expedição'; if(headerEl) headerEl.textContent = 'OEXP (ID)'; }
-            } else { 
-                if (lastUpdateTag) {
-                    lastUpdateTag.classList.add('hidden'); 
-                    lastUpdateTag.classList.remove('flex'); 
-                }
-            }
+            } else { if (lastUpdateTag) { lastUpdateTag.classList.add('hidden'); lastUpdateTag.classList.remove('flex'); } }
             if(window.lucide) lucide.createIcons();
         }
 
@@ -1343,26 +1265,20 @@
         }
 
         function refreshDashboard() {
-            const dateStartInput = document.getElementById('dateStart');
-            const dateEndInput = document.getElementById('dateEnd');
-            const dateStart = dateStartInput ? dateStartInput.value : '';
-            const dateEnd = dateEndInput ? dateEndInput.value : '';
+            const dateStartInput = document.getElementById('dateStart'), dateEndInput = document.getElementById('dateEnd');
+            const dateStart = dateStartInput ? dateStartInput.value : '', dateEnd = dateEndInput ? dateEndInput.value : '';
             const lineView = document.getElementById('lineViewSelector').value;
-            
             if (dateStart) localStorage.setItem('persist_dateStart', dateStart); 
             if (dateEnd) localStorage.setItem('persist_dateEnd', dateEnd);
             localStorage.setItem('persist_lineView', lineView);
-            
             updateLineChart(); renderBarChart(); renderDoughnutChart(); renderBalanceTable();
         }
 
         function runDashboardAnalysis() { setupDateFilters(); refreshDashboard(); }
-
         function normalizeString(v) { if (v === undefined || v === null) return ''; return String(v).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
         function normalizeDirection(v) {
             const s = normalizeString(v); if (['e', '1'].includes(s) || s.startsWith('ent') || s.includes('in')) return 'Entrada'; if (['s', '2'].includes(s) || s.startsWith('sai') || s.includes('out')) return 'Saída'; return 'Outro';
         }
-
         function getStatusCategory(v) {
             const s = normalizeString(v); if (s.includes('proc') || s.includes('concl') || s.includes('ok') || s === 'sucesso' || s === 'p') return 'Processado'; if (s.includes('pend') || s.includes('aguard') || s === 'a') return 'Pendente'; if (s.includes('erro') || s.includes('falh') || s.includes('diverg') || s === 'e') return 'Erro'; return 'Outros';
         }
@@ -1379,8 +1295,7 @@
 
         function getFilteredData() {
             const dCol = columnMapping['data'], startInput = document.getElementById('dateStart'), endInput = document.getElementById('dateEnd');
-            const startStr = startInput ? startInput.value : '';
-            const endStr = endInput ? endInput.value : '';
+            const startStr = startInput ? startInput.value : '', endStr = endInput ? endInput.value : '';
             return rawData.filter(r => { const dateVal = getSafeDate(r[dCol]); if (!dateVal) return true; const dISO = formatDateToISO(dateVal); if (!startStr || !endStr) return true; return dISO >= startStr && dISO <= endStr; });
         }
 
@@ -1445,7 +1360,7 @@
             if(doughnutChart) doughnutChart.destroy();
             doughnutChart = new Chart(ctx, {
                 type: 'doughnut', data: { labels, datasets: [{ data: Object.values(counts), backgroundColor: bgColors }]},
-                options: { responsive:true, maintainAspectRatio:false, cutout: '70%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { display: true, color: (c) => getContrastColor(c.dataset.backgroundColor[c.dataIndex]), font: { weight: 'bold', size: 11 }, formatter: (v) => v || '' } } }
+                options: { responsive:true, maintainAspectRatio:false, cutout: '70%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { display: true, color: (c) => getContrastColor(c.dataset.backgroundColor[c.dataset.backgroundColor.indexOf(c.dataset.backgroundColor[c.dataIndex])]), font: { weight: 'bold', size: 11 }, formatter: (v) => v || '' } } }
             });
         }
 
@@ -1454,24 +1369,12 @@
             const tbody = document.getElementById('balanceTableBody'); if(!tbody) return;
             tbody.innerHTML = '';
             const limitVal = document.getElementById('tableLimit').value, limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
-            
-            const filterIdInput = document.getElementById('filter-id');
-            const filterEntInput = document.getElementById('filter-entradas');
-            const filterSaiInput = document.getElementById('filter-saidas');
-            const filterDifInput = document.getElementById('filter-dif');
-            const filterStatInput = document.getElementById('filter-status');
-            
-            const fId = normalizeString(filterIdInput ? filterIdInput.value : '');
-            const fEnt = normalizeString(filterEntInput ? filterEntInput.value : '');
-            const fSai = normalizeString(filterSaiInput ? filterSaiInput.value : '');
-            const fDif = normalizeString(filterDifInput ? filterDifInput.value : '');
-            const fStat = normalizeString(filterStatInput ? filterStatInput.value : '');
-
+            const filterIdInput = document.getElementById('filter-id'), filterEntInput = document.getElementById('filter-entradas'), filterSaiInput = document.getElementById('filter-saidas'), filterDifInput = document.getElementById('filter-dif'), filterStatInput = document.getElementById('filter-status'), filterMotivoInput = document.getElementById('filter-motivo');
+            const fId = normalizeString(filterIdInput ? filterIdInput.value : ''), fEnt = normalizeString(filterEntInput ? filterEntInput.value : ''), fSai = normalizeString(filterSaiInput ? filterSaiInput.value : ''), fDif = normalizeString(filterDifInput ? filterDifInput.value : ''), fStat = normalizeString(filterStatInput ? filterStatInput.value : ''), fMotivo = normalizeString(filterMotivoInput ? filterMotivoInput.value : '');
             const iKey = idCol || (headers.find(h => { const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem'); }) || headers[0]);
             const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || ''), sKey = statCol || (headers.find(h => { const n = normalizeString(h); return n.includes('status') || n.includes('sit'); }) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
             const isOEXP = currentFileName.toUpperCase().includes('OEXP');
             const map = new Map();
-            
             data.forEach(r => {
                 let id = r[iKey]; if(id === undefined || id === null || id === '') return;
                 id = String(id).trim(); const sysRaw = String(r[sysKey] || '').toUpperCase();
@@ -1484,28 +1387,36 @@
                 else if(dir === 'Entrada' && isRowProtheus) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
                 else if(dir === 'Saída' && isRowWMS) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
             });
-            
-            if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado.</td></tr>'; return; }
+            if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado.</td></tr>'; return; }
             const entries = Array.from(map.entries());
             const filteredEntries = entries.filter(([id, v]) => {
-                if (analysisEvidences[id]) return false;
-                const isFullyOK = (v.s_ok > 0 && v.e_ok > 0 && v.s_err === 0 && v.e_err === 0 && v.s_pend === 0 && v.e_pend === 0);
-                if (isFullyOK) return false;
+                // Se já marcado como concluído nas evidências, sai da tabela
+                if (analysisEvidences[id] && analysisEvidences[id].completed) return false;
+
+                const hasError = v.s_err > 0 || v.e_err > 0;
+                const hasPending = v.s_pend > 0 || v.e_pend > 0;
+                const isDivergent = (v.s_ok > 0 && v.e_ok === 0) || (v.e_ok > 0 && v.s_ok === 0);
+
+                // Deve trazer pendentes e erros conforme o gráfico
+                if (!hasError && !hasPending && !isDivergent) return false;
+
                 let statusParts = [];
                 if (v.s_err > 0) statusParts.push("Erro na saída"); if (v.e_err > 0) statusParts.push("Erro na entrada"); if (v.s_pend > 0) statusParts.push("Pendente de saída"); if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0)) statusParts.push("Pendente de entrada");
                 const statusMsg = statusParts.join(" | "), diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
-                const matchesId = !fId || normalizeString(id).includes(fId), matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), matchesSai = !fSai || String(v.s_ok).includes(fSai), matchesDif = !fDif || String(diffVal).includes(fDif), matchesStat = !fStat || normalizeString(statusMsg).includes(fStat);
-                return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat;
+                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
+
+                const matchesId = !fId || normalizeString(id).includes(fId), matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), matchesSai = !fSai || String(v.s_ok).includes(fSai), matchesDif = !fDif || String(diffVal).includes(fDif), matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
             }).map(([id, v]) => {
                 let statusParts = [], statusClass = 'text-red-500 font-bold', diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1, diffClass = 'text-red-600 font-bold';
                 if (v.s_err > 0) statusParts.push("Erro saída"); if (v.e_err > 0) statusParts.push("Erro entrada");
                 if (v.s_pend > 0) { statusParts.push("Pendente saída"); statusClass = 'text-orange-600 font-bold'; }
                 if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) { statusParts.push("Pendente entrada"); statusClass = 'text-orange-600 font-bold'; }
-                return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass };
+                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
+                return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass, motivo };
             });
-            
             const displayEntries = filteredEntries.slice(0, limit);
-            if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">Nada crítico no período.</td></tr>'; return; }
+            if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Nada crítico no período.</td></tr>'; return; }
             displayEntries.forEach(item => {
                 tbody.innerHTML += `
                     <tr>
@@ -1514,8 +1425,9 @@
                         <td class="px-4 py-2 border-b text-center text-blue-700 bg-blue-50/10">${item.v.s_ok}</td>
                         <td class="px-4 py-2 border-b text-center bg-slate-50 ${item.diffClass}">${item.diffVal}</td>
                         <td class="px-4 py-2 border-b text-center text-[10px] ${item.statusClass}">${item.statusMsg}</td>
+                        <td class="px-4 py-2 border-b text-[10px] text-slate-500 italic max-w-[200px] truncate" title="${item.motivo || 'Nenhuma nota registrada'}">${item.motivo || '-'}</td>
                         <td class="px-4 py-2 border-b text-center">
-                            <button onclick="openEvidenceModal('${item.id}')" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition">
+                            <button onclick="openEvidenceModal('${item.id}')" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition" title="Registrar Análise">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
                         </td>
@@ -1531,10 +1443,9 @@
             rawData = []; headers = []; currentFileName = ''; analysisEvidences = {};
             localStorage.removeItem('persist_dateStart'); localStorage.removeItem('persist_dateEnd'); localStorage.removeItem('persist_lineView');
             await removeFromDB('last_raw_data'); await removeFromDB('last_headers'); await removeFromDB('last_filename'); await removeFromDB('last_mapping'); await removeFromDB('analysis_evidences');
-            const dS = document.getElementById('dateStart'); if(dS) dS.value = '';
-            const dE = document.getElementById('dateEnd'); if(dE) dE.value = '';
-            const lV = document.getElementById('lineViewSelector'); if(lV) lV.value = 'all';
-            const fI = document.getElementById('filter-id'); if(fI) fI.value = '';
+            const dS = document.getElementById('dateStart'), dE = document.getElementById('dateEnd'), lV = document.getElementById('lineViewSelector'), fI = document.getElementById('filter-id');
+            if(dS) dS.value = ''; if(dE) dE.value = ''; if(lV) lV.value = 'all'; if(fI) fI.value = '';
+            document.getElementById('dashboardBottomView').classList.add('hidden');
             updateAppState(false); if(lineChart) lineChart.destroy(); if(barChart) barChart.destroy(); if(doughnutChart) doughnutChart.destroy();
         }
 
@@ -1543,10 +1454,7 @@
             t.innerHTML = `<span>${msg}</span>`;
             const bg = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-slate-800');
             t.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl text-white text-sm z-50 transition-all duration-300 translate-y-0 opacity-100 ${bg}`;
-            setTimeout(() => { 
-                t.classList.remove('translate-y-0', 'opacity-100'); 
-                t.classList.add('translate-y-24', 'opacity-0'); 
-            }, 3000);
+            setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-24', 'opacity-0'); }, 3000);
         }
     </script>
 </body>
