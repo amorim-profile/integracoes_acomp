@@ -1400,18 +1400,40 @@
                 // Deve trazer pendentes e erros conforme o gráfico
                 if (!hasError && !hasPending && !isDivergent) return false;
 
+                // LOGICA DE STATUS PARA FILTRO (Deve ser idêntica à exibição)
                 let statusParts = [];
-                if (v.s_err > 0) statusParts.push("Erro na saída"); if (v.e_err > 0) statusParts.push("Erro na entrada"); if (v.s_pend > 0) statusParts.push("Pendente de saída"); if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0)) statusParts.push("Pendente de entrada");
-                const statusMsg = statusParts.join(" | "), diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
+                if (v.s_err > 0) statusParts.push("Erro saída"); 
+                if (v.e_err > 0) statusParts.push("Erro entrada"); 
+                if (v.s_pend > 0) statusParts.push("Pendente saída"); 
+                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) statusParts.push("Pendente entrada");
+                
+                const statusMsg = statusParts.join(" | ") || "Analisar";
+                const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
                 const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
 
-                const matchesId = !fId || normalizeString(id).includes(fId), matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), matchesSai = !fSai || String(v.s_ok).includes(fSai), matchesDif = !fDif || String(diffVal).includes(fDif), matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                const matchesId = !fId || normalizeString(id).includes(fId), 
+                      matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), 
+                      matchesSai = !fSai || String(v.s_ok).includes(fSai), 
+                      matchesDif = !fDif || String(diffVal).includes(fDif), 
+                      matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), 
+                      matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                
                 return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
             }).map(([id, v]) => {
                 let statusParts = [], statusClass = 'text-red-500 font-bold', diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1, diffClass = 'text-red-600 font-bold';
-                if (v.s_err > 0) statusParts.push("Erro saída"); if (v.e_err > 0) statusParts.push("Erro entrada");
-                if (v.s_pend > 0) { statusParts.push("Pendente saída"); statusClass = 'text-orange-600 font-bold'; }
-                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) { statusParts.push("Pendente entrada"); statusClass = 'text-orange-600 font-bold'; }
+                
+                if (v.s_err > 0) statusParts.push("Erro saída"); 
+                if (v.e_err > 0) statusParts.push("Erro entrada");
+                
+                if (v.s_pend > 0) { 
+                    statusParts.push("Pendente saída"); 
+                    statusClass = 'text-orange-600 font-bold'; 
+                }
+                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) { 
+                    statusParts.push("Pendente entrada"); 
+                    statusClass = 'text-orange-600 font-bold'; 
+                }
+                
                 const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
                 return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass, motivo };
             });
@@ -1434,6 +1456,82 @@
                     </tr>`;
             });
             lucide.createIcons();
+        }
+
+        function exportTableToCSV() {
+            if (rawData.length === 0) {
+                showToast("Não existem dados para exportar.", "info");
+                return;
+            }
+
+            const idCol = columnMapping['id'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
+            const iKey = idCol || (headers.find(h => { const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem'); }) || headers[0]);
+            const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || ''), sKey = statCol || (headers.find(h => { const n = normalizeString(h); return n.includes('status') || n.includes('sit'); }) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
+            const isOEXP = currentFileName.toUpperCase().includes('OEXP');
+            
+            const filterIdInput = document.getElementById('filter-id'), filterEntInput = document.getElementById('filter-entradas'), filterSaiInput = document.getElementById('filter-saidas'), filterDifInput = document.getElementById('filter-dif'), filterStatInput = document.getElementById('filter-status'), filterMotivoInput = document.getElementById('filter-motivo');
+            const fId = normalizeString(filterIdInput ? filterIdInput.value : ''), fEnt = normalizeString(filterEntInput ? filterEntInput.value : ''), fSai = normalizeString(filterSaiInput ? filterSaiInput.value : ''), fDif = normalizeString(filterDifInput ? filterDifInput.value : ''), fStat = normalizeString(filterStatInput ? filterStatInput.value : ''), fMotivo = normalizeString(filterMotivoInput ? filterMotivoInput.value : '');
+
+            const map = new Map();
+            data.forEach(r => {
+                let id = r[iKey]; if(id === undefined || id === null || id === '') return;
+                id = String(id).trim(); const sysRaw = String(r[sysKey] || '').toUpperCase();
+                const isWMS = sysRaw.includes('WMS'), isProtheus = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
+                const dir = normalizeDirection(r[dKey]), stat = getStatusCategory(r[sKey]);
+                if(!map.has(id)) map.set(id, { e_ok: 0, s_ok: 0, e_pend: 0, s_pend: 0, e_err: 0, s_err: 0 });
+                const o = map.get(id), isRowWMS = isWMS || (!isProtheus && (isOEXP ? dir === 'Saída' : dir === 'Entrada')), isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
+                if(dir === 'Entrada' && isRowWMS) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
+                else if(dir === 'Saída' && isRowProtheus) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
+                else if(dir === 'Entrada' && isRowProtheus) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
+                else if(dir === 'Saída' && isRowWMS) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
+            });
+
+            const entries = Array.from(map.entries());
+            const filtered = entries.filter(([id, v]) => {
+                if (analysisEvidences[id] && analysisEvidences[id].completed) return false;
+                const hasError = v.s_err > 0 || v.e_err > 0, hasPending = v.s_pend > 0 || v.e_pend > 0, isDivergent = (v.s_ok > 0 && v.e_ok === 0) || (v.e_ok > 0 && v.s_ok === 0);
+                if (!hasError && !hasPending && !isDivergent) return false;
+
+                let statusParts = [];
+                if (v.s_err > 0) statusParts.push("Erro saída"); 
+                if (v.e_err > 0) statusParts.push("Erro entrada"); 
+                if (v.s_pend > 0) statusParts.push("Pendente saída"); 
+                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) statusParts.push("Pendente entrada");
+                
+                const statusMsg = statusParts.join(" | ") || "Analisar", diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1, motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
+                const matchesId = !fId || normalizeString(id).includes(fId), matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), matchesSai = !fSai || String(v.s_ok).includes(fSai), matchesDif = !fDif || String(diffVal).includes(fDif), matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
+            }).map(([id, v]) => {
+                let statusParts = [];
+                if (v.s_err > 0) statusParts.push("Erro saída"); if (v.e_err > 0) statusParts.push("Erro entrada");
+                if (v.s_pend > 0) statusParts.push("Pendente saída"); 
+                if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) statusParts.push("Pendente entrada");
+                const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
+                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
+                return [id, v.e_ok, v.s_ok, diffVal, statusParts.join(" | ") || "Analisar", motivo];
+            });
+
+            if (filtered.length === 0) {
+                showToast("Não há dados visíveis para exportar.", "info");
+                return;
+            }
+
+            const csvHeaders = ["ID", "Entradas (OK)", "Saidas (OK)", "Diferenca (OK)", "Estado de Erro", "Motivo / Analise"];
+            const formatCell = (val) => `"${String(val || "").replace(/"/g, '""')}"`;
+            const rows = filtered.map(item => item.map(formatCell));
+            const csvContent = csvHeaders.join(";") + "\n" + rows.map(r => r.join(";")).join("\n");
+            
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Relatorio_Divergencias_${timestamp}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Exportação concluída!", "success");
         }
 
         function setupNotesAutoSave() { const f = document.getElementById('notesField'); if (f) f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value); }
