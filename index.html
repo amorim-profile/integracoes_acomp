@@ -916,6 +916,8 @@
             const filterDeadline = document.getElementById('rep-filter-deadline').value;
             const limitVal = document.getElementById('repTableLimit').value;
             const limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
+            
+            // Filtra os dados
             const filtered = registeredActions.filter(act => {
                 const matchesDate = !filterDate || act.date === filterDate;
                 const matchesPriority = !filterPriority || normalizeString(act.priorityId).includes(filterPriority);
@@ -924,6 +926,21 @@
                 const matchesDeadline = !filterDeadline || act.deadline === filterDeadline;
                 return matchesDate && matchesPriority && matchesSystem && matchesStatus && matchesDeadline;
             });
+
+            // Ordena por Prioridade (P1, P2, P3...) numericamente se possível
+            filtered.sort((a, b) => {
+                const getPriorityScore = (p) => {
+                    const match = String(p || "").match(/^[Pp](\d+)/);
+                    return match ? parseInt(match[1]) : 1000000; // Coloca itens sem o padrão Px no fim
+                };
+                const scoreA = getPriorityScore(a.priorityId);
+                const scoreB = getPriorityScore(b.priorityId);
+                if (scoreA !== scoreB) return scoreA - scoreB;
+                
+                // Fallback para ordem alfabética da string completa caso o número seja igual ou inexistente
+                return String(a.priorityId || "").localeCompare(String(b.priorityId || ""));
+            });
+
             if (filtered.length === 0) {
                 if(emptyState) emptyState.classList.remove('hidden');
                 return;
