@@ -478,18 +478,34 @@
                 </h3>
                 <button onclick="closeEvidenceModal()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x"></i></button>
             </div>
-            <div class="p-6">
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ID Selecionado</label>
-                <div id="evidenceTargetId" class="text-sm font-mono bg-slate-100 p-2 rounded border border-slate-200 mb-4 text-slate-700"></div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ID Selecionado</label>
+                    <div id="evidenceTargetId" class="text-sm font-mono bg-slate-100 p-2 rounded border border-slate-200 text-slate-700"></div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Estado da Análise</label>
+                    <select id="evidenceStatus" class="w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="Processado com sucesso">Processado com sucesso</option>
+                        <option value="Recebimento não finalizado">Recebimento não finalizado</option>
+                        <option value="Item aguardando CQ">Item aguardando CQ</option>
+                        <option value="Saldo insuficiente em estoque">Saldo insuficiente em estoque</option>
+                        <option value="Saldo indisponível no Armazém Orig.02">Saldo indisponível no Armazém Orig.02</option>
+                        <option value="Alguns itens processados; outros pendentes (Acompanhar)">Alguns itens processados; outros pendentes (Acompanhar)</option>
+                    </select>
+                </div>
                 
-                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota de Evidência / Motivo</label>
-                <textarea id="evidenceNote" class="w-full h-32 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none outline-none bg-slate-50 transition-all" placeholder="Escreva o motivo pelo qual este registro está em análise..."></textarea>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota de Evidência / Motivo</label>
+                    <textarea id="evidenceNote" class="w-full h-32 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none outline-none bg-slate-50 transition-all" placeholder="Escreva o motivo pelo qual este registro está em análise..."></textarea>
+                </div>
                 
-                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-center gap-3">
+                <div class="p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-center gap-3">
                     <input type="checkbox" id="evidenceCompleted" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded cursor-pointer">
                     <label for="evidenceCompleted" class="text-sm font-bold text-indigo-900 cursor-pointer">Marcar como Concluído</label>
                 </div>
-                <p class="text-[10px] text-slate-400 mt-2 italic">* Se não marcar como concluído, o registro permanecerá na tabela com a nota salva.</p>
+                <p class="text-[10px] text-slate-400 italic">* Registos concluídos deixam de ser exibidos na tabela de divergências.</p>
             </div>
             <div class="p-6 bg-slate-50 flex items-center justify-end gap-3">
                 <button onclick="closeEvidenceModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
@@ -1128,9 +1144,10 @@
 
         function openEvidenceModal(id) {
             currentEvidenceId = id;
-            const evidence = analysisEvidences[id] || { note: '', completed: false };
+            const evidence = analysisEvidences[id] || { note: '', completed: false, status: 'Processado com sucesso' };
             document.getElementById('evidenceTargetId').textContent = id;
             document.getElementById('evidenceNote').value = evidence.note || '';
+            document.getElementById('evidenceStatus').value = evidence.status || 'Processado com sucesso';
             document.getElementById('evidenceCompleted').checked = evidence.completed || false;
             document.getElementById('evidenceModal').classList.remove('hidden');
             lucide.createIcons();
@@ -1139,10 +1156,11 @@
 
         async function saveEvidence() {
             const note = document.getElementById('evidenceNote').value.trim();
+            const status = document.getElementById('evidenceStatus').value;
             const completed = document.getElementById('evidenceCompleted').checked;
             
-            if(!note && !completed) { 
-                // Se tudo vazio, removemos qualquer registro prévio
+            // Lógica de remoção se estiver no estado padrão e vazio
+            if(!note && !completed && status === 'Processado com sucesso') { 
                 delete analysisEvidences[currentEvidenceId];
             } else {
                 const timestamp = new Date().toISOString();
@@ -1151,28 +1169,28 @@
 
                 analysisEvidences[currentEvidenceId] = { 
                     note: note, 
+                    status: status,
                     timestamp: timestamp, 
                     completed: completed 
                 };
 
-                // Adicionar às notas gerais apenas se for uma nova nota ou alteração relevante
-                if (note) {
-                    const notesEl = document.getElementById('notesField');
-                    const fName = currentFileName.toUpperCase();
-                    const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
-                    const statusStr = completed ? "[CONCLUÍDO]" : "[ANÁLISE]";
-                    const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} ${statusStr} - ${note}`;
-                    if(notesEl) {
-                        notesEl.value += newNoteEntry;
-                        if (currentFileName) {
-                            localStorage.setItem('notes_' + currentFileName, notesEl.value);
-                        }
+                // Adicionar às notas gerais com o status incluído
+                const notesEl = document.getElementById('notesField');
+                const fName = currentFileName.toUpperCase();
+                const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
+                const completionStr = completed ? "[CONCLUÍDO]" : "[ANÁLISE]";
+                const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} ${completionStr} (${status}) - ${note || 'Sem descrição'}`;
+                
+                if(notesEl) {
+                    notesEl.value += newNoteEntry;
+                    if (currentFileName) {
+                        localStorage.setItem('notes_' + currentFileName, notesEl.value);
                     }
                 }
             }
 
             await saveToDB('analysis_evidences', analysisEvidences);
-            showToast(completed ? "ID marcado como concluído!" : "Evidência guardada!", "success");
+            showToast(completed ? "ID marcado como concluído!" : "Análise atualizada!", "success");
             closeEvidenceModal();
             renderBalanceTable(); 
         }
@@ -1538,14 +1556,17 @@
                 
                 const statusMsg = statusParts.join(" | ") || "Analisar";
                 const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
-                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
+                
+                // Agora pegamos tanto a nota quanto o status fixo para exibição/filtro
+                const ev = analysisEvidences[id];
+                const motivoStr = ev ? `${ev.status || ''} ${ev.note || ''}`.trim() : '';
 
                 const matchesId = !fId || normalizeString(id).includes(fId), 
                       matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), 
                       matchesSai = !fSai || String(v.s_ok).includes(fSai), 
                       matchesDif = !fDif || String(diffVal).includes(fDif), 
                       matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), 
-                      matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                      matchesMotivo = !fMotivo || normalizeString(motivoStr).includes(fMotivo);
                 
                 return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
             }).map(([id, v]) => {
@@ -1563,8 +1584,13 @@
                     statusClass = 'text-orange-600 font-bold'; 
                 }
                 
-                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
-                return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass, motivo };
+                const ev = analysisEvidences[id];
+                let displayMotivo = '-';
+                if(ev) {
+                    displayMotivo = ev.status ? `<span class="bg-indigo-50 text-indigo-600 px-1 rounded font-bold">${ev.status}</span> ${ev.note || ''}` : ev.note;
+                }
+
+                return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass, displayMotivo, rawMotivo: ev ? `${ev.status} ${ev.note}` : '' };
             });
             const displayEntries = filteredEntries.slice(0, limit);
             if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Nada crítico no período.</td></tr>'; return; }
@@ -1576,7 +1602,7 @@
                         <td class="px-4 py-2 border-b text-center text-blue-700 bg-blue-50/10">${item.v.s_ok}</td>
                         <td class="px-4 py-2 border-b text-center bg-slate-50 ${item.diffClass}">${item.diffVal}</td>
                         <td class="px-4 py-2 border-b text-center text-[10px] ${item.statusClass}">${item.statusMsg}</td>
-                        <td class="px-4 py-2 border-b text-[10px] text-slate-500 italic max-w-[200px] truncate" title="${item.motivo || 'Nenhuma nota registrada'}">${item.motivo || '-'}</td>
+                        <td class="px-4 py-2 border-b text-[10px] text-slate-500 italic max-w-[200px] truncate" title="${item.rawMotivo || 'Nenhuma nota registrada'}">${item.displayMotivo}</td>
                         <td class="px-4 py-2 border-b text-center">
                             <button onclick="openEvidenceModal('${item.id}')" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition" title="Registrar Análise">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -1617,9 +1643,6 @@
 
             const entries = Array.from(map.entries());
             const filtered = entries.filter(([id, v]) => {
-                // Ao exportar, ignoramos a exclusão de itens processados com sucesso (!hasError && !hasPending && !isDivergent)
-                // Mantemos apenas a exclusão de evidências concluídas se desejado, 
-                // mas incluímos os processados que não estão no histórico de análise.
                 if (analysisEvidences[id] && analysisEvidences[id].completed) return false;
                 
                 let statusParts = [];
@@ -1630,14 +1653,16 @@
                 
                 const statusMsg = statusParts.join(" | ") || "Processado";
                 const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
-                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
+                
+                const ev = analysisEvidences[id];
+                const motivoStr = ev ? `${ev.status || ''} ${ev.note || ''}`.trim() : '';
                 
                 const matchesId = !fId || normalizeString(id).includes(fId), 
                       matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), 
                       matchesSai = !fSai || String(v.s_ok).includes(fSai), 
                       matchesDif = !fDif || String(diffVal).includes(fDif), 
                       matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), 
-                      matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                      matchesMotivo = !fMotivo || normalizeString(motivoStr).includes(fMotivo);
                 
                 return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
             }).map(([id, v]) => {
@@ -1648,8 +1673,11 @@
                 
                 const statusMsg = statusParts.join(" | ") || "Processado";
                 const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
-                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
-                return [id, v.e_ok, v.s_ok, diffVal, statusMsg, motivo];
+                
+                const ev = analysisEvidences[id];
+                const motivoStr = ev ? `${ev.status || ''} - ${ev.note || ''}`.trim() : '';
+                
+                return [id, v.e_ok, v.s_ok, diffVal, statusMsg, motivoStr];
             });
 
             if (filtered.length === 0) {
