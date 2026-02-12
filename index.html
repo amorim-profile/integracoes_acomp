@@ -1617,27 +1617,39 @@
 
             const entries = Array.from(map.entries());
             const filtered = entries.filter(([id, v]) => {
+                // Ao exportar, ignoramos a exclusão de itens processados com sucesso (!hasError && !hasPending && !isDivergent)
+                // Mantemos apenas a exclusão de evidências concluídas se desejado, 
+                // mas incluímos os processados que não estão no histórico de análise.
                 if (analysisEvidences[id] && analysisEvidences[id].completed) return false;
-                const hasError = v.s_err > 0 || v.e_err > 0, hasPending = v.s_pend > 0 || v.e_pend > 0, isDivergent = (v.s_ok > 0 && v.e_ok === 0) || (v.e_ok > 0 && v.s_ok === 0);
-                if (!hasError && !hasPending && !isDivergent) return false;
-
+                
                 let statusParts = [];
                 if (v.s_err > 0) statusParts.push("Erro saída"); 
                 if (v.e_err > 0) statusParts.push("Erro entrada"); 
                 if (v.s_pend > 0) statusParts.push("Pendente saída"); 
                 if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) statusParts.push("Pendente entrada");
                 
-                const statusMsg = statusParts.join(" | ") || "Analisar", diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1, motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
-                const matchesId = !fId || normalizeString(id).includes(fId), matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), matchesSai = !fSai || String(v.s_ok).includes(fSai), matchesDif = !fDif || String(diffVal).includes(fDif), matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                const statusMsg = statusParts.join(" | ") || "Processado";
+                const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
+                const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
+                
+                const matchesId = !fId || normalizeString(id).includes(fId), 
+                      matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), 
+                      matchesSai = !fSai || String(v.s_ok).includes(fSai), 
+                      matchesDif = !fDif || String(diffVal).includes(fDif), 
+                      matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), 
+                      matchesMotivo = !fMotivo || normalizeString(motivo).includes(fMotivo);
+                
                 return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
             }).map(([id, v]) => {
                 let statusParts = [];
                 if (v.s_err > 0) statusParts.push("Erro saída"); if (v.e_err > 0) statusParts.push("Erro entrada");
                 if (v.s_pend > 0) statusParts.push("Pendente saída"); 
                 if (v.e_pend > 0 || (v.s_ok > 0 && v.e_ok === 0 && v.e_err === 0)) statusParts.push("Pendente entrada");
+                
+                const statusMsg = statusParts.join(" | ") || "Processado";
                 const diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1;
                 const motivo = analysisEvidences[id] ? analysisEvidences[id].note : '';
-                return [id, v.e_ok, v.s_ok, diffVal, statusParts.join(" | ") || "Analisar", motivo];
+                return [id, v.e_ok, v.s_ok, diffVal, statusMsg, motivo];
             });
 
             if (filtered.length === 0) {
@@ -1645,7 +1657,7 @@
                 return;
             }
 
-            const csvHeaders = ["ID", "Entradas (OK)", "Saidas (OK)", "Diferenca (OK)", "Estado de Erro", "Motivo / Analise"];
+            const csvHeaders = ["ID", "Entradas (OK)", "Saidas (OK)", "Diferenca (OK)", "Estado", "Motivo / Analise"];
             const formatCell = (val) => `"${String(val || "").replace(/"/g, '""')}"`;
             const rows = filtered.map(item => item.map(formatCell));
             const csvContent = csvHeaders.join(";") + "\n" + rows.map(r => r.join(";")).join("\n");
@@ -1655,12 +1667,12 @@
             const link = document.createElement("a");
             const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
             link.setAttribute("href", url);
-            link.setAttribute("download", `Relatorio_Divergencias_${timestamp}.csv`);
+            link.setAttribute("download", `Relatorio_Full_Divergencias_${timestamp}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast("Exportação concluída!", "success");
+            showToast("Exportação completa concluída!", "success");
         }
 
         function setupNotesAutoSave() { const f = document.getElementById('notesField'); if (f) f.oninput = () => currentFileName && localStorage.setItem('notes_' + currentFileName, f.value); }
