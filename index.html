@@ -1159,35 +1159,19 @@
             const status = document.getElementById('evidenceStatus').value;
             const completed = document.getElementById('evidenceCompleted').checked;
             
-            // Lógica de remoção se estiver no estado padrão e vazio
-            if(!note && !completed && status === 'Processado com sucesso') { 
-                delete analysisEvidences[currentEvidenceId];
-            } else {
-                const timestamp = new Date().toISOString();
-                const timeStr = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-                const dateStr = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
+            // Lógica ajustada: O registo é sempre guardado se clicado em "Guardar Alteração",
+            // registando o status selecionado mesmo que seja o padrão "Processado com sucesso".
+            const timestamp = new Date().toISOString();
 
-                analysisEvidences[currentEvidenceId] = { 
-                    note: note, 
-                    status: status,
-                    timestamp: timestamp, 
-                    completed: completed 
-                };
+            analysisEvidences[currentEvidenceId] = { 
+                note: note, 
+                status: status,
+                timestamp: timestamp, 
+                completed: completed 
+            };
 
-                // Adicionar às notas gerais com o status incluído
-                const notesEl = document.getElementById('notesField');
-                const fName = currentFileName.toUpperCase();
-                const prefix = fName.includes('ASN') ? 'ASN' : (fName.includes('OEXP') ? 'OEXP' : 'ID');
-                const completionStr = completed ? "[CONCLUÍDO]" : "[ANÁLISE]";
-                const newNoteEntry = `\n[${dateStr} ${timeStr}] ${prefix}: ${currentEvidenceId} ${completionStr} (${status}) - ${note || 'Sem descrição'}`;
-                
-                if(notesEl) {
-                    notesEl.value += newNoteEntry;
-                    if (currentFileName) {
-                        localStorage.setItem('notes_' + currentFileName, notesEl.value);
-                    }
-                }
-            }
+            // REMOVIDO: A inserção automática no campo de notas geral (Quadro de Notas)
+            // para não poluir o campo geral com registos individuais de ASN/OEXP.
 
             await saveToDB('analysis_evidences', analysisEvidences);
             showToast(completed ? "ID marcado como concluído!" : "Análise atualizada!", "success");
@@ -1450,7 +1434,7 @@
             const data = dataRawFiltered.filter(r => {
                 if (viewType === 'all') return true; const dir = normalizeDirection(r[dirCol]);
                 const sKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo') || n.includes('aplicacao'); }) || '');
-                const sysRaw = sKey ? String(r[sKey] || '').toUpperCase() : '';
+                const sysRaw = sKey ? String(r[sysKey] || '').toUpperCase() : '';
                 const isWMSExplicit = sysRaw.includes('WMS'), isProtheusExplicit = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
                 if (viewType === 'wms') return isWMSExplicit || dir === 'Entrada'; if (viewType === 'protheus') return isProtheusExplicit || dir === 'Saída'; return true;
             });
