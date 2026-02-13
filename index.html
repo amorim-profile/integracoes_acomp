@@ -320,6 +320,7 @@
                         <table id="asnTable" class="w-full text-sm text-left relative">
                             <thead class="bg-slate-50 text-slate-600 sticky top-0 shadow-sm z-10">
                                 <tr>
+                                    <th class="px-4 py-2 font-semibold border-b">Data</th>
                                     <th id="idColumnHeader" class="px-4 py-2 font-semibold border-b">ASN (ID)</th>
                                     <th class="px-4 py-2 font-semibold border-b text-center text-green-600">Entradas (OK)</th>
                                     <th class="px-4 py-2 font-semibold border-b text-center text-blue-600">Saídas (OK)</th>
@@ -329,6 +330,7 @@
                                     <th class="px-4 py-2 font-semibold border-b text-center text-slate-400">Ação</th>
                                 </tr>
                                 <tr class="bg-white">
+                                    <th class="px-2 py-1 border-b"><input type="text" id="filter-balance-date" class="table-filter-input text-center" placeholder="Filtro Data..." oninput="renderBalanceTable()"></th>
                                     <th class="px-2 py-1 border-b"><input type="text" id="filter-id" class="table-filter-input" placeholder="Pesquisar ID..." oninput="renderBalanceTable()"></th>
                                     <th class="px-2 py-1 border-b"><input type="text" id="filter-entradas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
                                     <th class="px-2 py-1 border-b"><input type="text" id="filter-saidas" class="table-filter-input text-center" placeholder="Filtro..." oninput="renderBalanceTable()"></th>
@@ -1496,12 +1498,12 @@
         }
 
         function renderBalanceTable() {
-            const idCol = columnMapping['id'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
+            const idCol = columnMapping['id'], dataCol = columnMapping['data'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
             const tbody = document.getElementById('balanceTableBody'); if(!tbody) return;
             tbody.innerHTML = '';
             const limitVal = document.getElementById('tableLimit').value, limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
-            const filterIdInput = document.getElementById('filter-id'), filterEntInput = document.getElementById('filter-entradas'), filterSaiInput = document.getElementById('filter-saidas'), filterDifInput = document.getElementById('filter-dif'), filterStatInput = document.getElementById('filter-status'), filterMotivoInput = document.getElementById('filter-motivo');
-            const fId = normalizeString(filterIdInput ? filterIdInput.value : ''), fEnt = normalizeString(filterEntInput ? filterEntInput.value : ''), fSai = normalizeString(filterSaiInput ? filterSaiInput.value : ''), fDif = normalizeString(filterDifInput ? filterDifInput.value : ''), fStat = normalizeString(filterStatInput ? filterStatInput.value : ''), fMotivo = normalizeString(filterMotivoInput ? filterMotivoInput.value : '');
+            const filterDateInput = document.getElementById('filter-balance-date'), filterIdInput = document.getElementById('filter-id'), filterEntInput = document.getElementById('filter-entradas'), filterSaiInput = document.getElementById('filter-saidas'), filterDifInput = document.getElementById('filter-dif'), filterStatInput = document.getElementById('filter-status'), filterMotivoInput = document.getElementById('filter-motivo');
+            const fDate = normalizeString(filterDateInput ? filterDateInput.value : ''), fId = normalizeString(filterIdInput ? filterIdInput.value : ''), fEnt = normalizeString(filterEntInput ? filterEntInput.value : ''), fSai = normalizeString(filterSaiInput ? filterSaiInput.value : ''), fDif = normalizeString(filterDifInput ? filterDifInput.value : ''), fStat = normalizeString(filterStatInput ? filterStatInput.value : ''), fMotivo = normalizeString(filterMotivoInput ? filterMotivoInput.value : '');
             const iKey = idCol || (headers.find(h => { const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem'); }) || headers[0]);
             const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || ''), sKey = statCol || (headers.find(h => { const n = normalizeString(h); return n.includes('status') || n.includes('sit'); }) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
             const isOEXP = currentFileName.toUpperCase().includes('OEXP');
@@ -1511,14 +1513,21 @@
                 id = String(id).trim(); const sysRaw = String(r[sysKey] || '').toUpperCase();
                 const isWMS = sysRaw.includes('WMS'), isProtheus = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
                 const dir = normalizeDirection(r[dKey]), stat = getStatusCategory(r[sKey]);
-                if(!map.has(id)) map.set(id, { e_ok: 0, s_ok: 0, e_pend: 0, s_pend: 0, e_err: 0, s_err: 0 });
+                
+                if(!map.has(id)) {
+                    // Pega a data formatada para exibição
+                    const dtRaw = getSafeDate(r[dataCol]);
+                    const fmtDate = dtRaw ? formatDateToISO(dtRaw).split('-').reverse().join('/') : '-';
+                    map.set(id, { date: fmtDate, e_ok: 0, s_ok: 0, e_pend: 0, s_pend: 0, e_err: 0, s_err: 0 });
+                }
+                
                 const o = map.get(id), isRowWMS = isWMS || (!isProtheus && (isOEXP ? dir === 'Saída' : dir === 'Entrada')), isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
                 if(dir === 'Entrada' && isRowWMS) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
                 else if(dir === 'Saída' && isRowProtheus) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
                 else if(dir === 'Entrada' && isRowProtheus) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
                 else if(dir === 'Saída' && isRowWMS) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
             });
-            if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado.</td></tr>'; return; }
+            if(map.size === 0) { tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Nenhum balanço identificado.</td></tr>'; return; }
             const entries = Array.from(map.entries());
             const filteredEntries = entries.filter(([id, v]) => {
                 // Se já marcado como concluído nas evidências, sai da tabela
@@ -1545,14 +1554,15 @@
                 const ev = analysisEvidences[id];
                 const motivoStr = ev ? `${ev.status || ''} ${ev.note || ''}`.trim() : '';
 
-                const matchesId = !fId || normalizeString(id).includes(fId), 
+                const matchesDate = !fDate || normalizeString(v.date).includes(fDate),
+                      matchesId = !fId || normalizeString(id).includes(fId), 
                       matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), 
                       matchesSai = !fSai || String(v.s_ok).includes(fSai), 
                       matchesDif = !fDif || String(diffVal).includes(fDif), 
                       matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), 
                       matchesMotivo = !fMotivo || normalizeString(motivoStr).includes(fMotivo);
                 
-                return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
+                return matchesDate && matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
             }).map(([id, v]) => {
                 let statusParts = [], statusClass = 'text-red-500 font-bold', diffVal = (v.s_ok > 0 && v.e_ok > 0) ? 0 : -1, diffClass = 'text-red-600 font-bold';
                 
@@ -1577,10 +1587,11 @@
                 return { id, v, statusMsg: statusParts.join(" | ") || "Analisar", statusClass, diffVal, diffClass, displayMotivo, rawMotivo: ev ? `${ev.status} ${ev.note}` : '' };
             });
             const displayEntries = filteredEntries.slice(0, limit);
-            if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">Nada crítico no período.</td></tr>'; return; }
+            if(displayEntries.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Nada crítico no período.</td></tr>'; return; }
             displayEntries.forEach(item => {
                 tbody.innerHTML += `
                     <tr>
+                        <td class="px-4 py-2 border-b text-center text-slate-500 font-mono text-xs whitespace-nowrap">${item.v.date}</td>
                         <td class="px-4 py-2 border-b font-mono text-xs">${item.id}</td>
                         <td class="px-4 py-2 border-b text-center text-green-700 bg-green-50/10">${item.v.e_ok}</td>
                         <td class="px-4 py-2 border-b text-center text-blue-700 bg-blue-50/10">${item.v.s_ok}</td>
@@ -1603,13 +1614,13 @@
                 return;
             }
 
-            const idCol = columnMapping['id'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
+            const idCol = columnMapping['id'], dataCol = columnMapping['data'], dirCol = columnMapping['direcao'], statCol = columnMapping['status'], sysCol = columnMapping['sistema'], data = getFilteredData();
             const iKey = idCol || (headers.find(h => { const n = normalizeString(h); return n.includes('id') || n.includes('asn') || n.includes('oexp') || n.includes('ordem'); }) || headers[0]);
             const dKey = dirCol || (headers.find(h => normalizeString(h).includes('direcao')) || ''), sKey = statCol || (headers.find(h => { const n = normalizeString(h); return n.includes('status') || n.includes('sit'); }) || ''), sysKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo'); }) || 'Sistema');
             const isOEXP = currentFileName.toUpperCase().includes('OEXP');
             
-            const filterIdInput = document.getElementById('filter-id'), filterEntInput = document.getElementById('filter-entradas'), filterSaiInput = document.getElementById('filter-saidas'), filterDifInput = document.getElementById('filter-dif'), filterStatInput = document.getElementById('filter-status'), filterMotivoInput = document.getElementById('filter-motivo');
-            const fId = normalizeString(filterIdInput ? filterIdInput.value : ''), fEnt = normalizeString(filterEntInput ? filterEntInput.value : ''), fSai = normalizeString(filterSaiInput ? filterSaiInput.value : ''), fDif = normalizeString(filterDifInput ? filterDifInput.value : ''), fStat = normalizeString(filterStatInput ? filterStatInput.value : ''), fMotivo = normalizeString(filterMotivoInput ? filterMotivoInput.value : '');
+            const filterDateInput = document.getElementById('filter-balance-date'), filterIdInput = document.getElementById('filter-id'), filterEntInput = document.getElementById('filter-entradas'), filterSaiInput = document.getElementById('filter-saidas'), filterDifInput = document.getElementById('filter-dif'), filterStatInput = document.getElementById('filter-status'), filterMotivoInput = document.getElementById('filter-motivo');
+            const fDate = normalizeString(filterDateInput ? filterDateInput.value : ''), fId = normalizeString(filterIdInput ? filterIdInput.value : ''), fEnt = normalizeString(filterEntInput ? filterEntInput.value : ''), fSai = normalizeString(filterSaiInput ? filterSaiInput.value : ''), fDif = normalizeString(filterDifInput ? filterDifInput.value : ''), fStat = normalizeString(filterStatInput ? filterStatInput.value : ''), fMotivo = normalizeString(filterMotivoInput ? filterMotivoInput.value : '');
 
             const map = new Map();
             data.forEach(r => {
@@ -1617,7 +1628,13 @@
                 id = String(id).trim(); const sysRaw = String(r[sysKey] || '').toUpperCase();
                 const isWMS = sysRaw.includes('WMS'), isProtheus = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
                 const dir = normalizeDirection(r[dKey]), stat = getStatusCategory(r[sKey]);
-                if(!map.has(id)) map.set(id, { e_ok: 0, s_ok: 0, e_pend: 0, s_pend: 0, e_err: 0, s_err: 0 });
+                
+                if(!map.has(id)) {
+                    const dtRaw = getSafeDate(r[dataCol]);
+                    const fmtDate = dtRaw ? formatDateToISO(dtRaw).split('-').reverse().join('/') : '-';
+                    map.set(id, { date: fmtDate, e_ok: 0, s_ok: 0, e_pend: 0, s_pend: 0, e_err: 0, s_err: 0 });
+                }
+                
                 const o = map.get(id), isRowWMS = isWMS || (!isProtheus && (isOEXP ? dir === 'Saída' : dir === 'Entrada')), isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
                 if(dir === 'Entrada' && isRowWMS) { if(stat === 'Processado') o.e_ok++; else if(stat === 'Pendente') o.e_pend++; else if(stat === 'Erro') o.e_err++; }
                 else if(dir === 'Saída' && isRowProtheus) { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
@@ -1641,14 +1658,15 @@
                 const ev = analysisEvidences[id];
                 const motivoStr = ev ? `${ev.status || ''} ${ev.note || ''}`.trim() : '';
                 
-                const matchesId = !fId || normalizeString(id).includes(fId), 
+                const matchesDate = !fDate || normalizeString(v.date).includes(fDate),
+                      matchesId = !fId || normalizeString(id).includes(fId), 
                       matchesEnt = !fEnt || String(v.e_ok).includes(fEnt), 
                       matchesSai = !fSai || String(v.s_ok).includes(fSai), 
                       matchesDif = !fDif || String(diffVal).includes(fDif), 
                       matchesStat = !fStat || normalizeString(statusMsg).includes(fStat), 
                       matchesMotivo = !fMotivo || normalizeString(motivoStr).includes(fMotivo);
                 
-                return matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
+                return matchesDate && matchesId && matchesEnt && matchesSai && matchesDif && matchesStat && matchesMotivo;
             }).map(([id, v]) => {
                 let statusParts = [];
                 if (v.s_err > 0) statusParts.push("Erro saída"); if (v.e_err > 0) statusParts.push("Erro entrada");
@@ -1661,7 +1679,7 @@
                 const ev = analysisEvidences[id];
                 const motivoStr = ev ? `${ev.status || ''} - ${ev.note || ''}`.trim() : '';
                 
-                return [id, v.e_ok, v.s_ok, diffVal, statusMsg, motivoStr];
+                return [v.date, id, v.e_ok, v.s_ok, diffVal, statusMsg, motivoStr];
             });
 
             if (filtered.length === 0) {
@@ -1669,7 +1687,7 @@
                 return;
             }
 
-            const csvHeaders = ["ID", "Entradas (OK)", "Saidas (OK)", "Diferenca (OK)", "Estado", "Motivo / Analise"];
+            const csvHeaders = ["Data", "ID", "Entradas (OK)", "Saidas (OK)", "Diferenca (OK)", "Estado", "Motivo / Analise"];
             const formatCell = (val) => `"${String(val || "").replace(/"/g, '""')}"`;
             const rows = filtered.map(item => item.map(formatCell));
             const csvContent = csvHeaders.join(";") + "\n" + rows.map(r => r.join(";")).join("\n");
