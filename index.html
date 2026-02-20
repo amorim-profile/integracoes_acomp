@@ -1319,28 +1319,17 @@
         function updateLineChart() {
             const dCol = columnMapping['data'], tCol = columnMapping['hora'], sCol = columnMapping['status'], dirCol = columnMapping['direcao'], sysCol = columnMapping['sistema'];
             const dataRawFiltered = getFilteredData(), viewType = document.getElementById('lineViewSelector').value;
-            
             const isOEXP = currentFileName.toUpperCase().includes('OEXP');
-            const sKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem') || n.includes('modulo') || n.includes('aplicacao'); }) || '');
-
-            // Filtragem aprimorada para WMS/Protheus baseada no tipo de ficheiro e fluxo
+            const sKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem'); }) || '');
             const data = dataRawFiltered.filter(r => {
                 if (viewType === 'all') return true; 
-                
-                const dir = normalizeDirection(r[dirCol]);
-                const sysRaw = sKey ? String(r[sKey] || '').toUpperCase() : '';
-                const isWMSExplicit = sysRaw.includes('WMS');
-                const isProtheusExplicit = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
-                
-                // Lógica consistente com o gráfico de barras para atribuição de sistema
+                const dir = normalizeDirection(r[dirCol]), sysRaw = sKey ? String(r[sKey] || '').toUpperCase() : '';
+                const isWMSExplicit = sysRaw.includes('WMS'), isProtheusExplicit = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
                 const isRowWMS = isWMSExplicit || (!isProtheusExplicit && (isOEXP ? dir === 'Saída' : dir === 'Entrada'));
                 const isRowProtheus = isProtheusExplicit || (!isWMSExplicit && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
-
-                if (viewType === 'wms') return isRowWMS;
-                if (viewType === 'protheus') return isRowProtheus;
+                if (viewType === 'wms') return isRowWMS; if (viewType === 'protheus') return isRowProtheus;
                 return true;
             });
-
             const cats = { 'Processado': { color: colorsBase.Processado, data: Array(24).fill(0) }, 'Pendente': { color: colorsBase.Pendente, data: Array(24).fill(0) }, 'Erro': { color: colorsBase.Erro, data: Array(24).fill(0) }, 'Outros': { color: colorsBase.Outros, data: Array(24).fill(0) } };
             data.forEach(r => {
                 const valHora = r[tCol]; let h = 0; if (valHora instanceof Date) h = valHora.getHours(); else if (typeof valHora === 'number') h = Math.floor(valHora < 1 ? valHora * 24 : valHora); else h = parseInt(String(valHora || '0').split(':')[0]);
@@ -1393,7 +1382,15 @@
             if(doughnutChart) doughnutChart.destroy();
             doughnutChart = new Chart(ctx, {
                 type: 'doughnut', data: { labels, datasets: [{ data: Object.values(counts), backgroundColor: bgColors }]},
-                options: { responsive:true, maintainAspectRatio:false, cutout: '70%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }, datalabels: { display: true, font: { weight: 'bold', size: 11 }, formatter: (v) => v || '' } } }
+                options: { responsive:true, maintainAspectRatio:false, cutout: '70%', plugins: { 
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }, 
+                    datalabels: { 
+                        display: true, 
+                        color: (context) => getContrastColor(context.dataset.backgroundColor[context.dataIndex]),
+                        font: { weight: 'bold', size: 11 }, 
+                        formatter: (v) => v || '' 
+                    } 
+                } }
             });
         }
 
