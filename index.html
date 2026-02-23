@@ -243,6 +243,7 @@
                                     <option value="Não iniciado">Não iniciado</option>
                                     <option value="Em analise">Em analise</option>
                                     <option value="Em andamento">Em andamento</option>
+                                    <option value="Em implementação">Em implementação</option>
                                     <option value="Em acompanhamento">Em acompanhamento</option>
                                     <option value="Em teste">Em teste</option>
                                     <option value="Concluído">Concluído</option>
@@ -448,6 +449,7 @@
                         <option value="Não iniciado">Não iniciado</option>
                         <option value="Em analise">Em analise</option>
                         <option value="Em andamento">Em andamento</option>
+                        <option value="Em implementação">Em implementação</option>
                         <option value="Em acompanhamento">Em acompanhamento</option>
                         <option value="Em teste">Em teste</option>
                         <option value="Concluído">Concluído</option>
@@ -953,6 +955,7 @@
                     case 'Não iniciado': statusColor = 'bg-red-100 text-red-700'; break;
                     case 'Em analise': statusColor = 'bg-blue-100 text-blue-700'; break;
                     case 'Em andamento': statusColor = 'bg-indigo-100 text-indigo-700'; break;
+                    case 'Em implementação': statusColor = 'bg-purple-100 text-purple-700'; break; // Novo status cor púrpura
                     case 'Em acompanhamento': statusColor = 'bg-slate-100 text-slate-700'; break;
                     case 'Em teste': statusColor = 'bg-orange-100 text-orange-700'; break;
                 }
@@ -1323,7 +1326,7 @@
             const sKey = sysCol || (headers.find(h => { const n = normalizeString(h); return n.includes('sistema') || n.includes('origem'); }) || '');
             const data = dataRawFiltered.filter(r => {
                 if (viewType === 'all') return true; 
-                const dir = normalizeDirection(r[dirCol]), sysRaw = sKey ? String(r[sKey] || '').toUpperCase() : '';
+                const dir = normalizeDirection(r[dirCol]), sysRaw = sKey ? String(r[sysKey] || '').toUpperCase() : '';
                 const isWMSExplicit = sysRaw.includes('WMS'), isProtheusExplicit = sysRaw.includes('PROTHEUS') || sysRaw.includes('ERP') || sysRaw.includes('TOTVS') || sysRaw.includes('SXS');
                 const isRowWMS = isWMSExplicit || (!isProtheusExplicit && (isOEXP ? dir === 'Saída' : dir === 'Entrada'));
                 const isRowProtheus = isProtheusExplicit || (!isWMSExplicit && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
