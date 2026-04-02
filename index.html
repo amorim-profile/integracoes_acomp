@@ -267,6 +267,8 @@
                                     <option value="">Todos</option>
                                     <option value="Protheus">Protheus</option>
                                     <option value="WMS">WMS</option>
+                                    <option value="WMS / Protheus">WMS / Protheus</option>
+                                    <option value="BI">BI</option>
                                 </select>
                             </div>
                             <div>
@@ -468,6 +470,8 @@
                             <option value="" disabled selected>Escolha o sistema...</option>
                             <option value="Protheus">Protheus</option>
                             <option value="WMS">WMS</option>
+                            <option value="WMS / Protheus">WMS / Protheus</option>
+                            <option value="BI">BI</option>
                         </select>
                     </div>
                     <div>
@@ -750,7 +754,7 @@
                         ...data, 
                         status: normalizeActionStatus(data.status), 
                         firebaseId: doc.id,
-                        archived: data.archived || false // Garante que propriedade arquivado existe
+                        archived: data.archived || false 
                     };
                 });
                 if (remoteActions.length > 0) {
@@ -863,8 +867,6 @@
                 setTimeout(() => { if (selectedActionIds.size === 0) bar.classList.add('hidden'); }, 300);
             }
         }
-
-        // --- Fim das Funcionalidades de Arquivamento ---
 
         async function handleActionsImport(input) {
             const file = input.files[0];
@@ -1280,7 +1282,7 @@
             try {
                 if(window.lucide) lucide.createIcons();
                 setupNotesAutoSave();
-                loadSavedViewSettings(); // Carrega visibilidade das abas
+                loadSavedViewSettings(); 
                 directoryHandle = await getFromDB('last_dir_handle');
                 if (directoryHandle) {
                     document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
@@ -1359,7 +1361,6 @@
             const reportVisible = document.getElementById('showReport').checked;
             const folderVisible = document.getElementById('showFolderMapping').checked;
             
-            // Pelo menos um deve estar visível para evitar interface vazia
             if (!dashVisible && !reportVisible) {
                 showToast("Selecione pelo menos uma aba para visualização.", "error");
                 return;
@@ -1382,7 +1383,6 @@
             if (reportBtn) reportBtn.classList.toggle('hidden', !reportVisible);
             if (folderSect) folderSect.classList.toggle('hidden', !folderVisible);
 
-            // Redireciona para a primeira aba visível se a atual for escondida
             const isDashActive = dashBtn && dashBtn.classList.contains('active');
             const isReportActive = reportBtn && reportBtn.classList.contains('active');
 
@@ -1785,7 +1785,6 @@
             setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-24', 'opacity-0'); }, 3000);
         }
 
-        // --- Gestão de Preferências Adicionada ---
         function openSettingsModal() {
             const showDash = localStorage.getItem('nav_dash_visible') !== 'false';
             const showReport = localStorage.getItem('nav_report_visible') !== 'false';
