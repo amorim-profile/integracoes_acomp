@@ -50,6 +50,8 @@
         #sidebar { transition: all 0.3s ease-in-out; }
         #dashboardView, #reportView, #dashboardBottomView { transition: all 0.3s ease-in-out; }
         #syncIndicator { transition: opacity 0.3s; }
+        
+        .bulk-action-bar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
@@ -67,8 +69,8 @@
                         <i id="toggleSidebarIcon" data-lucide="panel-left-close" class="w-5 h-5"></i>
                     </button>
                     <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="layout-dashboard" class="text-blue-600"></i>
-                        Dashboard Analítico
+                        <i id="headerIcon" data-lucide="layout-dashboard" class="text-blue-600"></i>
+                        <span id="headerTitle">Dashboard Analítico</span>
                     </h1>
                     <div id="lastUpdateTag" class="hidden flex items-center gap-1.5 px-2.5 py-1 bg-white text-slate-500 text-[10px] font-semibold rounded-full border border-slate-200 shadow-sm animate-in fade-in slide-in-from-left-2 duration-500">
                         <i data-lucide="clock" class="w-3 h-3 text-blue-500"></i>
@@ -100,13 +102,17 @@
                         <i data-lucide="x" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
+                <!-- Botão de Configurações -->
+                <button onclick="openSettingsModal()" class="p-2.5 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 rounded-xl shadow-sm transition-all active:scale-95" title="Configurações de Visualização">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
             </div>
         </header>
 
         <div id="main-content" class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             <!-- Sidebar -->
             <div id="sidebar" class="xl:col-span-3 space-y-6 shrink-0">
-                <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <section id="section-folder-mapping" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="folder-search" class="w-4 h-4 text-orange-500"></i> Pasta Local (API)
                     </h2>
@@ -192,7 +198,24 @@
 
             <!-- Report View -->
             <div id="reportView" class="hidden xl:col-span-9 space-y-6">
-                <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 relative">
+                    <!-- Barra de Ações em Massa -->
+                    <div id="bulkActionBar" class="bulk-action-bar hidden absolute top-4 left-1/2 -translate-x-1/2 z-20 px-6 py-3 bg-slate-900 text-white rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-top-10 duration-300">
+                        <span class="text-xs font-bold"><span id="selectedCount">0</span> itens selecionados</span>
+                        <div class="w-px h-4 bg-slate-700"></div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="bulkArchive(true)" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider hover:text-orange-400 transition">
+                                <i data-lucide="archive" class="w-3.5 h-3.5"></i> Arquivar Seleção
+                            </button>
+                            <button onclick="bulkArchive(false)" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider hover:text-emerald-400 transition">
+                                <i data-lucide="archive-restore" class="w-3.5 h-3.5"></i> Restaurar Seleção
+                            </button>
+                            <button onclick="clearSelection()" class="p-1 hover:bg-slate-800 rounded-full text-slate-400 transition">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="flex items-center justify-between mb-8">
                         <div>
                             <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -215,9 +238,19 @@
 
                     <!-- Filtros Relatório -->
                     <div class="mb-6 p-5 bg-slate-50 border border-slate-200 rounded-xl shadow-inner">
-                        <div class="flex items-center gap-2 mb-3">
-                            <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
-                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Filtrar Relatórios</h3>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
+                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Filtrar Relatórios</h3>
+                            </div>
+                            <!-- Alternar Arquivo -->
+                            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ver Arquivo</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="rep-filter-archived" onchange="renderActionsTable()" class="sr-only peer">
+                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                                </label>
+                            </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                             <div>
@@ -275,6 +308,9 @@
                         <table class="w-full text-sm text-left">
                             <thead class="bg-slate-50 text-slate-600">
                                 <tr>
+                                    <th class="px-4 py-4 border-b text-center w-10">
+                                        <input type="checkbox" id="selectAllActions" onchange="toggleAllSelections(this)" class="w-4 h-4 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500 cursor-pointer">
+                                    </th>
                                     <th class="px-6 py-4 font-bold border-b">Data</th>
                                     <th class="px-6 py-4 font-bold border-b text-center">ID Prioridade</th>
                                     <th class="px-6 py-4 font-bold border-b">Sistema</th>
@@ -520,6 +556,62 @@
         </div>
     </div>
 
+    <!-- Modal Configurações de Visualização -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-[140] modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="settings-2" class="text-blue-500"></i> Preferências
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-6 space-y-6">
+                <p class="text-xs text-slate-500 leading-relaxed font-medium">Escolha quais elementos devem estar visíveis:</p>
+                
+                <div class="space-y-3">
+                    <!-- Aba Dashboard -->
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors cursor-pointer group" onclick="toggleSettingCheckbox('showDash')">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm font-bold text-slate-700">Aba Dashboard</span>
+                        </div>
+                        <input type="checkbox" id="showDash" checked class="w-5 h-5 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500 cursor-pointer" onclick="event.stopPropagation()">
+                    </div>
+
+                    <!-- Aba Report -->
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors cursor-pointer group" onclick="toggleSettingCheckbox('showReport')">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm font-bold text-slate-700">Aba Report</span>
+                        </div>
+                        <input type="checkbox" id="showReport" checked class="w-5 h-5 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500 cursor-pointer" onclick="event.stopPropagation()">
+                    </div>
+
+                    <!-- Monitorização de Pasta -->
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors cursor-pointer group" onclick="toggleSettingCheckbox('showFolderMapping')">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-orange-100 text-orange-600 rounded-lg group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                                <i data-lucide="folder-search" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm font-bold text-slate-700">Mapeamento de Pasta</span>
+                        </div>
+                        <input type="checkbox" id="showFolderMapping" checked class="w-5 h-5 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500 cursor-pointer" onclick="event.stopPropagation()">
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 flex items-center justify-end gap-3">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+                <button onclick="saveViewSettings()" class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-100 transition flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Aplicar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl translate-y-24 opacity-0 transition-all duration-300 z-50 text-sm font-medium flex items-center gap-2"></div>
 
     <script>
@@ -549,6 +641,7 @@
         let currentEvidenceId = null;
         let registeredActions = []; 
         let firebaseUser = null;
+        let selectedActionIds = new Set(); // Conjunto de IDs selecionados
 
         let lineChart = null;
         let barChart = null;
@@ -656,7 +749,8 @@
                     return { 
                         ...data, 
                         status: normalizeActionStatus(data.status), 
-                        firebaseId: doc.id 
+                        firebaseId: doc.id,
+                        archived: data.archived || false // Garante que propriedade arquivado existe
                     };
                 });
                 if (remoteActions.length > 0) {
@@ -692,6 +786,86 @@
             }
         }
 
+        // --- Funcionalidades de Arquivamento ---
+
+        async function toggleArchiveAction(id, archiveState = true) {
+            const index = registeredActions.findIndex(a => a.id === id);
+            if (index !== -1) {
+                registeredActions[index].archived = archiveState;
+                await saveToDB('registered_actions', registeredActions);
+                if (firebaseUser) await uploadActionToFirebase(registeredActions[index]);
+                renderActionsTable();
+                showToast(archiveState ? "Ação enviada para o arquivo." : "Ação restaurada.", "success");
+            }
+        }
+
+        async function bulkArchive(archiveState = true) {
+            if (selectedActionIds.size === 0) return;
+            
+            let count = 0;
+            const updates = [];
+            
+            registeredActions.forEach(act => {
+                if (selectedActionIds.has(act.id)) {
+                    act.archived = archiveState;
+                    if (firebaseUser) updates.push(uploadActionToFirebase(act));
+                    count++;
+                }
+            });
+
+            await Promise.all(updates);
+            await saveToDB('registered_actions', registeredActions);
+            
+            selectedActionIds.clear();
+            updateBulkActionBar();
+            renderActionsTable();
+            showToast(`${count} registros ${archiveState ? 'arquivados' : 'restaurados'}.`, "success");
+        }
+
+        function toggleActionSelection(id) {
+            if (selectedActionIds.has(id)) selectedActionIds.delete(id);
+            else selectedActionIds.add(id);
+            updateBulkActionBar();
+        }
+
+        function toggleAllSelections(masterCheckbox) {
+            const visibleCheckboxes = document.querySelectorAll('.action-row-checkbox');
+            visibleCheckboxes.forEach(cb => {
+                const id = parseInt(cb.getAttribute('data-id'));
+                cb.checked = masterCheckbox.checked;
+                if (masterCheckbox.checked) selectedActionIds.add(id);
+                else selectedActionIds.delete(id);
+            });
+            updateBulkActionBar();
+        }
+
+        function clearSelection() {
+            selectedActionIds.clear();
+            const master = document.getElementById('selectAllActions');
+            if (master) master.checked = false;
+            document.querySelectorAll('.action-row-checkbox').forEach(cb => cb.checked = false);
+            updateBulkActionBar();
+        }
+
+        function updateBulkActionBar() {
+            const bar = document.getElementById('bulkActionBar');
+            const countEl = document.getElementById('selectedCount');
+            if (!bar || !countEl) return;
+
+            if (selectedActionIds.size > 0) {
+                countEl.textContent = selectedActionIds.size;
+                bar.classList.remove('hidden');
+                bar.classList.remove('opacity-0');
+                bar.classList.remove('-translate-y-10');
+            } else {
+                bar.classList.add('opacity-0');
+                bar.classList.add('-translate-y-10');
+                setTimeout(() => { if (selectedActionIds.size === 0) bar.classList.add('hidden'); }, 300);
+            }
+        }
+
+        // --- Fim das Funcionalidades de Arquivamento ---
+
         async function handleActionsImport(input) {
             const file = input.files[0];
             if (!file) return;
@@ -725,7 +899,8 @@
                             desc: String(row["Descricao"] || ""),
                             resolution: String(row["Solucao"] || ""),
                             deadline: deadlineObj ? formatDateToISO(deadlineObj) : formatDateToISO(new Date()),
-                            status: statusMigrated
+                            status: statusMigrated,
+                            archived: false
                         };
                         registeredActions.unshift(actionData);
                         if (firebaseUser) await uploadActionToFirebase(actionData);
@@ -795,12 +970,19 @@
             const bottomView = document.getElementById('dashboardBottomView');
             const navDash = document.getElementById('nav-dashboard');
             const navRep = document.getElementById('nav-report');
+            
+            const headerTitle = document.getElementById('headerTitle');
+            const headerIcon = document.getElementById('headerIcon');
+
             if (view === 'dashboard') {
                 dashboardView.classList.remove('hidden');
                 reportView.classList.add('hidden');
                 navDash.classList.add('active');
                 navRep.classList.remove('active');
                 if (rawData.length > 0) bottomView.classList.remove('hidden');
+                
+                if(headerTitle) headerTitle.textContent = "Dashboard Analítico";
+                if(headerIcon) headerIcon.setAttribute('data-lucide', 'layout-dashboard');
             } else {
                 dashboardView.classList.add('hidden');
                 reportView.classList.remove('hidden');
@@ -808,6 +990,9 @@
                 navDash.classList.remove('active');
                 navRep.classList.add('active');
                 renderActionsTable();
+                
+                if(headerTitle) headerTitle.textContent = "Report de ações";
+                if(headerIcon) headerIcon.setAttribute('data-lucide', 'scroll-text');
             }
             if(window.lucide) lucide.createIcons();
         }
@@ -818,6 +1003,7 @@
             document.getElementById('rep-filter-system').value = '';
             document.getElementById('rep-filter-status').value = '';
             document.getElementById('rep-filter-deadline').value = '';
+            document.getElementById('rep-filter-archived').checked = false;
             document.getElementById('repTableLimit').value = '10';
             renderActionsTable();
             showToast("Filtros limpos.", "info");
@@ -888,7 +1074,8 @@
                 user: document.getElementById('actUser').value,
                 status: document.getElementById('actStatus').value,
                 desc: document.getElementById('actDesc').value,
-                resolution: document.getElementById('actResolution').value
+                resolution: document.getElementById('actResolution').value,
+                archived: editId ? (registeredActions.find(a => a.id === parseInt(editId))?.archived || false) : false
             };
             if (editId) {
                 const index = registeredActions.findIndex(a => a.id === parseInt(editId));
@@ -917,21 +1104,27 @@
             const emptyState = document.getElementById('actionsEmptyState');
             if(!tbody) return;
             tbody.innerHTML = '';
+            
             const filterDate = document.getElementById('rep-filter-date').value;
             const filterPriority = normalizeString(document.getElementById('rep-filter-priority').value);
             const filterSystem = document.getElementById('rep-filter-system').value;
             const filterStatus = document.getElementById('rep-filter-status').value;
             const filterDeadline = document.getElementById('rep-filter-deadline').value;
+            const filterArchived = document.getElementById('rep-filter-archived').checked;
+            
             const limitVal = document.getElementById('repTableLimit').value;
             const limit = limitVal === 'all' ? Infinity : parseInt(limitVal);
+            
             const filtered = registeredActions.filter(act => {
                 const matchesDate = !filterDate || act.date === filterDate;
                 const matchesPriority = !filterPriority || normalizeString(act.priorityId).includes(filterPriority);
                 const matchesSystem = !filterSystem || act.system === filterSystem;
                 const matchesStatus = !filterStatus || act.status === filterStatus;
                 const matchesDeadline = !filterDeadline || act.deadline === filterDeadline;
-                return matchesDate && matchesPriority && matchesSystem && matchesStatus && matchesDeadline;
+                const matchesArchive = (act.archived || false) === filterArchived;
+                return matchesDate && matchesPriority && matchesSystem && matchesStatus && matchesDeadline && matchesArchive;
             });
+            
             filtered.sort((a, b) => {
                 const getPriorityScore = (p) => {
                     const match = String(p || "").match(/^[Pp](\d+)/);
@@ -942,11 +1135,13 @@
                 if (scoreA !== scoreB) return scoreA - scoreB;
                 return String(a.priorityId || "").localeCompare(String(b.priorityId || ""));
             });
+            
             if (filtered.length === 0) {
                 if(emptyState) emptyState.classList.remove('hidden');
                 return;
             }
             if(emptyState) emptyState.classList.add('hidden');
+            
             const displayList = filtered.slice(0, limit);
             displayList.forEach(act => {
                 let statusColor = 'bg-slate-100 text-slate-700';
@@ -955,15 +1150,21 @@
                     case 'Não iniciado': statusColor = 'bg-red-100 text-red-700'; break;
                     case 'Em analise': statusColor = 'bg-blue-100 text-blue-700'; break;
                     case 'Em andamento': statusColor = 'bg-indigo-100 text-indigo-700'; break;
-                    case 'Em implementação': statusColor = 'bg-purple-100 text-purple-700'; break; // Novo status cor púrpura
+                    case 'Em implementação': statusColor = 'bg-purple-100 text-purple-700'; break;
                     case 'Em acompanhamento': statusColor = 'bg-slate-100 text-slate-700'; break;
                     case 'Em teste': statusColor = 'bg-orange-100 text-orange-700'; break;
                 }
                 const sysTag = act.system === 'Protheus' ? 'text-indigo-600' : 'text-orange-600';
                 const fmtDate = (typeof act.date === 'string' && act.date.includes('-')) ? act.date.split('-').reverse().join('/') : (act.date || '-');
                 const fmtDeadline = (typeof act.deadline === 'string' && act.deadline.includes('-')) ? act.deadline.split('-').reverse().join('/') : (act.deadline || '-');
+                
+                const isSelected = selectedActionIds.has(act.id);
+                
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50/50 transition-colors">
+                    <tr class="hover:bg-slate-50/50 transition-colors ${act.archived ? 'opacity-75 grayscale-[0.5]' : ''}">
+                        <td class="px-4 py-4 border-b text-center">
+                            <input type="checkbox" data-id="${act.id}" onchange="toggleActionSelection(${act.id})" ${isSelected ? 'checked' : ''} class="action-row-checkbox w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                        </td>
                         <td class="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap">${fmtDate}</td>
                         <td class="px-6 py-4 text-center whitespace-nowrap">
                             <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold border border-indigo-100">
@@ -988,6 +1189,9 @@
                         </td>
                         <td class="px-6 py-4 text-right whitespace-nowrap">
                             <div class="flex items-center justify-end gap-2">
+                                <button onclick="toggleArchiveAction(${act.id}, ${!act.archived})" class="p-1 transition ${act.archived ? 'text-emerald-500 hover:text-emerald-700' : 'text-slate-300 hover:text-orange-500'}" title="${act.archived ? 'Restaurar' : 'Arquivar'}">
+                                    <i data-lucide="${act.archived ? 'archive-restore' : 'archive'}" class="w-4 h-4"></i>
+                                </button>
                                 <button onclick="openActionModal(${act.id})" class="text-slate-300 hover:text-blue-500 transition p-1" title="Editar">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
                                 </button>
@@ -999,6 +1203,7 @@
                     </tr>`;
             });
             lucide.createIcons();
+            updateBulkActionBar();
         }
 
         function exportActionsToCSV() {
@@ -1075,6 +1280,7 @@
             try {
                 if(window.lucide) lucide.createIcons();
                 setupNotesAutoSave();
+                loadSavedViewSettings(); // Carrega visibilidade das abas
                 directoryHandle = await getFromDB('last_dir_handle');
                 if (directoryHandle) {
                     document.getElementById('mainFolderBtn').innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i> Reativar Pasta Local';
@@ -1082,7 +1288,11 @@
                 }
                 analysisEvidences = await getFromDB('analysis_evidences') || {};
                 const savedActions = await getFromDB('registered_actions') || [];
-                registeredActions = savedActions.map(act => ({ ...act, status: normalizeActionStatus(act.status) }));
+                registeredActions = savedActions.map(act => ({ 
+                    ...act, 
+                    status: normalizeActionStatus(act.status),
+                    archived: act.archived || false
+                }));
                 checkAndMapNewValuesFromList(registeredActions);
                 const savedData = await getFromDB('last_raw_data');
                 if (savedData) {
@@ -1124,6 +1334,66 @@
             showToast(completed ? "ID marcado como concluído!" : "Análise atualizada!", "success");
             closeEvidenceModal();
             renderBalanceTable(); 
+        }
+
+        // --- Gestão de Configurações de Visualização ---
+        function openSettingsModal() {
+            const showDash = localStorage.getItem('nav_dash_visible') !== 'false';
+            const showReport = localStorage.getItem('nav_report_visible') !== 'false';
+            const showFolder = localStorage.getItem('folder_mapping_visible') !== 'false';
+            
+            document.getElementById('showDash').checked = showDash;
+            document.getElementById('showReport').checked = showReport;
+            document.getElementById('showFolderMapping').checked = showFolder;
+            
+            document.getElementById('settingsModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function toggleSettingCheckbox(id) { 
+            const cb = document.getElementById(id); 
+            if(cb) cb.checked = !cb.checked; 
+        }
+        function saveViewSettings() {
+            const dashVisible = document.getElementById('showDash').checked;
+            const reportVisible = document.getElementById('showReport').checked;
+            const folderVisible = document.getElementById('showFolderMapping').checked;
+            
+            // Pelo menos um deve estar visível para evitar interface vazia
+            if (!dashVisible && !reportVisible) {
+                showToast("Selecione pelo menos uma aba para visualização.", "error");
+                return;
+            }
+
+            localStorage.setItem('nav_dash_visible', dashVisible);
+            localStorage.setItem('nav_report_visible', reportVisible);
+            localStorage.setItem('folder_mapping_visible', folderVisible);
+            
+            applyViewSettings(dashVisible, reportVisible, folderVisible);
+            closeSettingsModal();
+            showToast("Preferências aplicadas!", "success");
+        }
+        function applyViewSettings(dashVisible, reportVisible, folderVisible) {
+            const dashBtn = document.getElementById('nav-dashboard');
+            const reportBtn = document.getElementById('nav-report');
+            const folderSect = document.getElementById('section-folder-mapping');
+            
+            if (dashBtn) dashBtn.classList.toggle('hidden', !dashVisible);
+            if (reportBtn) reportBtn.classList.toggle('hidden', !reportVisible);
+            if (folderSect) folderSect.classList.toggle('hidden', !folderVisible);
+
+            // Redireciona para a primeira aba visível se a atual for escondida
+            const isDashActive = dashBtn && dashBtn.classList.contains('active');
+            const isReportActive = reportBtn && reportBtn.classList.contains('active');
+
+            if (!dashVisible && isDashActive) switchView('report');
+            else if (!reportVisible && isReportActive) switchView('dashboard');
+        }
+        function loadSavedViewSettings() {
+            const dashVisible = localStorage.getItem('nav_dash_visible') !== 'false';
+            const reportVisible = localStorage.getItem('nav_report_visible') !== 'false';
+            const folderVisible = localStorage.getItem('folder_mapping_visible') !== 'false';
+            applyViewSettings(dashVisible, reportVisible, folderVisible);
         }
 
         function handleFallbackFolder(input) {
@@ -1256,7 +1526,7 @@
                             if (tCol && row[tCol] !== undefined) {
                                 const valHora = row[tCol]; let h = 0, m = 0;
                                 if (valHora instanceof Date) { h = valHora.getHours(); m = valHora.getMinutes(); } 
-                                else if (typeof valHora === 'number') { const totalSecs = Math.floor(valHora * 86400); h = Math.floor(totalSecs / 3600); m = Math.floor((totalSecs % 3600) / 60); }
+                                else if (typeof valHora === 'number') { const totalSecs = Math.floor(valHora * 86400); h = Math.floor(totalSecs / 3600); h = Math.floor((totalSecs % 3600) / 60); m = Math.floor((totalSecs % 3600) / 60); }
                                 else { const parts = String(valHora).split(':'); h = parseInt(parts[0]) || 0; m = parseInt(parts[1]) || 0; }
                                 const tempDate = new Date(dt); tempDate.setHours(h, m, 0, 0); currentTimeInMs = tempDate.getTime();
                             }
@@ -1362,7 +1632,7 @@
                 const isRowProtheus = isProtheus || (!isWMS && (isOEXP ? dir === 'Entrada' : dir === 'Saída'));
                 let targetSys = isRowWMS ? 'WMS' : 'PROTHEUS';
                 if(dir === 'Entrada') { if(stat === 'Processado') agg[targetSys].e_ok++; else if(stat === 'Erro') agg[targetSys].e_err++; else if(stat === 'Pendente') agg[targetSys].e_pend++; }
-                else if(dir === 'Saída') { if(stat === 'Processado') agg[targetSys].s_ok++; else if(stat === 'Erro') agg[targetSys].s_err++; else if(stat === 'Pendente') agg[targetSys].s_pend++; }
+                else if(dir === 'Saída') { if(stat === 'Processado') o.s_ok++; else if(stat === 'Pendente') o.s_pend++; else if(stat === 'Erro') o.s_err++; }
             });
             const labels = ['WMS', 'PROTHEUS'];
             barChart = new Chart(ctx, {
@@ -1513,6 +1783,64 @@
             const bg = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-slate-800');
             t.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl text-white text-sm z-50 transition-all duration-300 translate-y-0 opacity-100 ${bg}`;
             setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('translate-y-24', 'opacity-0'); }, 3000);
+        }
+
+        // --- Gestão de Preferências Adicionada ---
+        function openSettingsModal() {
+            const showDash = localStorage.getItem('nav_dash_visible') !== 'false';
+            const showReport = localStorage.getItem('nav_report_visible') !== 'false';
+            const showFolder = localStorage.getItem('folder_mapping_visible') !== 'false';
+            
+            document.getElementById('showDash').checked = showDash;
+            document.getElementById('showReport').checked = showReport;
+            document.getElementById('showFolderMapping').checked = showFolder;
+            
+            document.getElementById('settingsModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function toggleSettingCheckbox(id) { 
+            const cb = document.getElementById(id); 
+            if(cb) cb.checked = !cb.checked; 
+        }
+        function saveViewSettings() {
+            const dashVisible = document.getElementById('showDash').checked;
+            const reportVisible = document.getElementById('showReport').checked;
+            const folderVisible = document.getElementById('showFolderMapping').checked;
+            
+            if (!dashVisible && !reportVisible) {
+                showToast("Selecione pelo menos uma aba para visualização.", "error");
+                return;
+            }
+
+            localStorage.setItem('nav_dash_visible', dashVisible);
+            localStorage.setItem('nav_report_visible', reportVisible);
+            localStorage.setItem('folder_mapping_visible', folderVisible);
+            
+            applyViewSettings(dashVisible, reportVisible, folderVisible);
+            closeSettingsModal();
+            showToast("Preferências aplicadas!", "success");
+        }
+        function applyViewSettings(dashVisible, reportVisible, folderVisible) {
+            const dashBtn = document.getElementById('nav-dashboard');
+            const reportBtn = document.getElementById('nav-report');
+            const folderSect = document.getElementById('section-folder-mapping');
+            
+            if (dashBtn) dashBtn.classList.toggle('hidden', !dashVisible);
+            if (reportBtn) reportBtn.classList.toggle('hidden', !reportVisible);
+            if (folderSect) folderSect.classList.toggle('hidden', !folderVisible);
+
+            const isDashActive = dashBtn && dashBtn.classList.contains('active');
+            const isReportActive = reportBtn && reportBtn.classList.contains('active');
+
+            if (!dashVisible && isDashActive) switchView('report');
+            else if (!reportVisible && isReportActive) switchView('dashboard');
+        }
+        function loadSavedViewSettings() {
+            const dashVisible = localStorage.getItem('nav_dash_visible') !== 'false';
+            const reportVisible = localStorage.getItem('nav_report_visible') !== 'false';
+            const folderVisible = localStorage.getItem('folder_mapping_visible') !== 'false';
+            applyViewSettings(dashVisible, reportVisible, folderVisible);
         }
     </script>
 </body>
